@@ -6,13 +6,15 @@ interface Props {
   project: CollectionEntry<"projects">;
   eager?: boolean;
   wide?: boolean;
+  tint?: "pink" | "violet" | "teal";
+  index?: number;
 }
 
-const { project, eager = false, wide = false } = Astro.props;
+const { project, eager = false, wide = false, tint = "violet", index = 0 } = Astro.props;
 const { data } = project;
 ---
 
-<article class:list={["card", wide && "card-wide"]}>
+<article class:list={["tile card", `tint-${tint}`, wide && "card-wide"]} style={`--i: ${index}`}>
   <Picture
     src={data.image}
     alt={data.alt}

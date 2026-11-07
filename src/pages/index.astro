@@ -1,11 +1,20 @@
 ---
 import { getCollection } from "astro:content";
+import About from "../components/About.astro";
 import Card from "../components/Card.astro";
+import Contact from "../components/Contact.astro";
+import Hero from "../components/Hero.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
 const projects = (await getCollection("projects")).sort(
   (a, b) => a.data.order - b.data.order || a.data.name.localeCompare(b.data.name),
 );
+
+const tints: Record<string, "pink" | "violet" | "teal"> = {
+  markuli: "pink",
+  Mnemora: "violet",
+  localAIWrapper: "teal",
+};
 ---
 
 <BaseLayout
@@ -13,20 +22,24 @@ const projects = (await getCollection("projects")).sort(
   description="Portfolio of Hemang Khatri: fast native apps and backend tools, including markuli, Mnemora and localAIWrapper."
 >
   <main>
-    <header class="hero">
-      <div class="name-tile">
-        <h1>Hemang Khatri</h1>
-      </div>
-    </header>
+    <Hero />
     <section id="work" aria-labelledby="work-heading">
-      <h2 id="work-heading">Selected work</h2>
-      <div class="work-grid">
+      <h2 id="work-heading" class="section-label">Selected work</h2>
+      <div class="bento work-grid">
         {
           projects.map((project, index) => (
-            <Card project={project} eager={index === 0} wide={index === 0} />
+            <Card
+              project={project}
+              eager={index === 0}
+              wide={index === 0}
+              tint={tints[project.data.name] ?? "violet"}
+              index={3 + index}
+            />
           ))
         }
       </div>
     </section>
+    <About />
+    <Contact />
   </main>
 </BaseLayout>

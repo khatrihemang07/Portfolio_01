@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hemangkhatri.pages.dev/sitemap.xml

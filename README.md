@@ -1,0 +1,54 @@
+# Portfolio
+
+The personal site of Hemang Khatri: one static page with a Hero, the Work section (Cards for markuli, Mnemora and localAIWrapper), About and Contact. Built with Astro and hosted on Cloudflare Pages at https://hemangkhatri.pages.dev.
+
+Terms (Site, Card, Dock, Ruler and others) are defined in `GLOSSARY.md`.
+
+## Commands
+
+Install with pnpm (see `.nvmrc` for the Node version).
+
+| Command            | What it does                                                            |
+| ------------------ | ----------------------------------------------------------------------- |
+| `pnpm dev`         | Local dev server                                                        |
+| `pnpm build`       | Production build into `dist/`, then writes `dist/_headers`              |
+| `pnpm verify`      | Type check, lint, build and tests. Run before every push                |
+| `pnpm test`        | Build-gate tests against the built `dist/`                              |
+| `pnpm check:links` | Checks every link on the built home page (needs network, run on demand) |
+
+## Cloudflare Pages setup (one time)
+
+1. In the Cloudflare dashboard, create a Pages project from the GitHub repository (Git integration). Every push to `main` deploys, and every pull request gets a preview URL.
+2. Build settings:
+   - Build command: `pnpm build`
+   - Build output directory: `dist`
+3. Node version: Pages reads `NODE_VERSION` from the environment. Set it to the value in `.nvmrc` (currently `22.23.4`). Set `PNPM_VERSION` as well if Pages does not pick up pnpm from the lockfile.
+4. Analytics: in the project, open **Web Analytics** and enable it. Cloudflare then injects its own beacon. The beacon is cookieless, so there is no consent banner. The code contains no analytics snippet or token on purpose. The Content-Security-Policy already allows the beacon hosts (`static.cloudflareinsights.com` and `cloudflareinsights.com`).
+
+## Headers are generated at build time
+
+`scripts/write-headers.mjs` runs after `astro build` and writes `dist/_headers`. It sets:
+
+- long, immutable caching for hashed assets under `/_astro/*`,
+- short caching with revalidation for HTML,
+- `nosniff`, `X-Frame-Options: DENY`, a referrer policy and a permissions policy,
+- a strict Content-Security-Policy.
+
+The CSP lists the SHA-256 hash of every inline `<script>` and `<style>` in every built HTML file. Those hashes only exist after the build, which is why the file is generated rather than kept by hand. If you add an inline script or style, nothing needs editing: the next build hashes it. The tests fail if any inline block is missing from the CSP.
+
+Inline `style="..."` attributes are allowed by `style-src-attr 'unsafe-inline'`. The tiles use `style="--i: N"` for the staggered load-in, and an attribute cannot be hashed. Scripts never get `unsafe-inline`.
+
+## Release checklist
+
+Run `pnpm verify`, then check the preview URL before merging to `main`.
+
+- [ ] `pnpm verify` passes on the branch
+- [ ] Every Fact has its recorded source checked, and the Showcase Images are the real app with Demo Data
+- [ ] `pnpm check:links` has no failures (warnings from github.com are rate limits and are acceptable)
+- [ ] Keyboard only: skip link, Dock, Ruler, theme toggle, copy button and every link reach focus with a visible ring
+- [ ] Both themes: light and dark, from the system and from the toggle
+- [ ] Phone width: layout has no horizontal scroll, the Ruler is hidden, the Dock works with a thumb
+- [ ] Reduced motion: the load-in, hover lift, Dock highlight and Ruler ticks stop moving
+- [ ] Preview URL: the response headers include the Content-Security-Policy and `Cache-Control` as expected (`curl -I <preview-url>`), and the Dock, Ruler, theme toggle, copy action and analytics still work with the CSP applied
+- [ ] Lighthouse on the preview: Performance, Accessibility and SEO at 100 (not run by the repository, run by hand)
+- [ ] Copy changes are approved by the owner

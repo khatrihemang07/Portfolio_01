@@ -8,8 +8,9 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/write-headers.mjs",
     "check": "astro check",
+    "check:links": "node scripts/check-links.mjs",
     "lint": "biome check .",
     "format": "biome check --write .",
     "test": "node --test scripts/build-gate.test.mjs",

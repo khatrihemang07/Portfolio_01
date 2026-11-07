@@ -756,10 +756,14 @@ h1 span {
   }
 }
 
-/* Phones: lighter glass and a background that scrolls with the page */
+/* Phones: no backdrop blur and a background that scrolls with the page. The blur
+   is cheap on a desktop GPU but cost about 1.4 s of main-thread time in a
+   throttled mobile Lighthouse run; the translucent tiles keep the look. */
 @media (max-width: 859.98px) {
-  :root {
-    --glass-blur: 6px;
+  .tile,
+  .dock-list {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
   body {
@@ -847,4 +851,13 @@ h1 span {
     background: none;
     color: CanvasText;
   }
+}
+
+/* 404: one glass tile, centred, with the link back to the Work. */
+.not-found-tile {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+  max-width: 32rem;
+  margin: var(--space-8) auto 0;
 }

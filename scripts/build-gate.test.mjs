@@ -1,9 +1,17 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { gzipSync } from "node:zlib";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const contentDir = join(root, "src", "content", "projects");
@@ -527,7 +535,7 @@ describe("built full page: look, feel and content", () => {
     }
     assert.doesNotMatch(
       page(),
-      /<(link|script|img|source)\b[^>]*\s(href|src|srcset)="https?:\/\//,
+      /<(link|script|img|source)\b(?![^>]*rel="canonical")[^>]*\s(href|src|srcset)="https?:\/\//,
     );
     assert.doesNotMatch(builtCss(), /url\(\s*["']?https?:/);
   });
@@ -683,5 +691,420 @@ describe("built navigation: Dock and Ruler", () => {
   test("the bundled navigation script writes localStorage key theme", () => {
     // The minifier may use quotes or template literals for the key.
     assert.match(builtJs(), /localStorage\.setItem\(\s*["'`]theme["'`]/);
+  });
+});
+
+// Release output: metadata, 404, sitemap, robots, headers and the transfer budget.
+const SITE = "https://hemangkhatri.pages.dev";
+const distPath = (...parts) => join(root, "dist", ...parts);
+const readDist = (...parts) => readFileSync(distPath(...parts), "utf8");
+
+function walkFiles(dir) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name);
+    return entry.isDirectory() ? walkFiles(path) : [path];
+  });
+}
+
+function runFullBuild() {
+  return spawnSync("pnpm", ["run", "build"], {
+    cwd: root,
+    encoding: "utf8",
+    timeout: 240_000,
+  });
+}
+
+// The attribute order follows the page source, so match the attribute by name.
+function metaTags(html) {
+  return html.match(/<meta\b[^>]*>/g) ?? [];
+}
+function metaContent(html, attribute, value) {
+  const tag = metaTags(html).find((meta) =>
+    new RegExp(`\\s${attribute}="${value}"`).test(meta),
+  );
+  return tag?.match(/\scontent="([^"]*)"/)?.[1];
+}
+
+// A _headers block is a path line followed by indented "Name: value" lines.
+function parseHeaders(text) {
+  const blocks = new Map();
+  let current = null;
+  for (const line of text.split("\n")) {
+    if (!line.trim()) continue;
+    if (!/^\s/.test(line)) {
+      current = line.trim();
+      blocks.set(current, new Map());
+      continue;
+    }
+    const at = line.indexOf(":");
+    blocks
+      .get(current)
+      ?.set(line.slice(0, at).trim().toLowerCase(), line.slice(at + 1).trim());
+  }
+  return blocks;
+}
+
+function parseCsp(csp) {
+  return new Map(
+    csp
+      .split(";")
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((part) => {
+        const [name, ...values] = part.split(/\s+/);
+        return [name, values];
+      }),
+  );
+}
+
+// CSP source expressions are quoted, so the token is 'sha256-...'.
+const sha256 = (text) =>
+  `'sha256-${createHash("sha256").update(text, "utf8").digest("base64")}'`;
+
+// Inline blocks are the ones the browser runs or applies without a request.
+function inlineScriptTexts(html) {
+  return [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)]
+    .filter(
+      ([, attrs]) =>
+        !/\ssrc=/.test(attrs) && !/type="application\/ld\+json"/.test(attrs),
+    )
+    .map(([, , text]) => text);
+}
+function inlineStyleTexts(html) {
+  return [...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)].map(
+    ([, text]) => text,
+  );
+}
+
+describe("launch hardening: built release output", () => {
+  before(() => {
+    const result = runFullBuild();
+    assert.equal(
+      result.status,
+      0,
+      `pnpm run build failed\n${result.stdout}\n${result.stderr}`,
+    );
+  });
+
+  const htmlFiles = () =>
+    walkFiles(join(root, "dist")).filter((file) => file.endsWith(".html"));
+  const headerBlocks = () => {
+    assert.ok(existsSync(distPath("_headers")), "expected dist/_headers");
+    return parseHeaders(readDist("_headers"));
+  };
+  const globalHeaders = () => headerBlocks().get("/*") ?? new Map();
+  const csp = () => globalHeaders().get("content-security-policy") ?? "";
+  const head = () => readDist("index.html");
+
+  test("_headers exists in dist and has an /_astro/* block", () => {
+    assert.ok(headerBlocks().has("/_astro/*"), "expected an /_astro/* block");
+  });
+
+  test("hashed assets are cached for a year and immutable", () => {
+    assert.equal(
+      headerBlocks().get("/_astro/*")?.get("cache-control"),
+      "public, max-age=31536000, immutable",
+    );
+  });
+
+  test("the catch-all block sets no Cache-Control, so it cannot merge into the immutable rule", () => {
+    assert.equal(globalHeaders().get("cache-control"), undefined);
+  });
+
+  test("every page gets nosniff, frame denial, a referrer policy and a permissions policy", () => {
+    const headers = globalHeaders();
+    assert.equal(headers.get("x-content-type-options"), "nosniff");
+    assert.equal(headers.get("x-frame-options"), "DENY");
+    assert.equal(
+      headers.get("referrer-policy"),
+      "strict-origin-when-cross-origin",
+    );
+    assert.equal(
+      headers.get("permissions-policy"),
+      "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+    );
+  });
+
+  test("the CSP lists the hash of every inline script and style in every built HTML file, 404 included", () => {
+    const directives = parseCsp(csp());
+    const scriptTokens = new Set(directives.get("script-src") ?? []);
+    const styleTokens = new Set(directives.get("style-src") ?? []);
+    const pages = htmlFiles();
+    assert.ok(
+      pages.some((file) => file.endsWith("404.html")),
+      "expected 404.html",
+    );
+    let scriptHashes = 0;
+    let styleHashes = 0;
+    for (const file of pages) {
+      const html = readFileSync(file, "utf8");
+      for (const text of inlineScriptTexts(html)) {
+        scriptHashes++;
+        assert.ok(
+          scriptTokens.has(sha256(text)),
+          `${file}: inline script hash missing from script-src`,
+        );
+      }
+      for (const text of inlineStyleTexts(html)) {
+        styleHashes++;
+        assert.ok(
+          styleTokens.has(sha256(text)),
+          `${file}: inline style hash missing from style-src`,
+        );
+      }
+    }
+    // Guard against passing vacuously: the no-flash theme script must exist.
+    assert.ok(scriptHashes >= 1, "expected at least one inline script");
+    assert.ok(styleHashes + scriptHashes >= 1, "expected inline blocks");
+  });
+
+  test("the CSP has exactly the approved directives", () => {
+    const directives = parseCsp(csp());
+    assert.deepEqual([...directives.keys()].sort(), [
+      "base-uri",
+      "connect-src",
+      "default-src",
+      "font-src",
+      "form-action",
+      "frame-ancestors",
+      "img-src",
+      "object-src",
+      "script-src",
+      "style-src",
+      "style-src-attr",
+    ]);
+    assert.deepEqual(directives.get("default-src"), ["'self'"]);
+    assert.deepEqual(directives.get("img-src"), ["'self'", "data:"]);
+    assert.deepEqual(directives.get("font-src"), ["'self'"]);
+    assert.deepEqual(directives.get("connect-src"), [
+      "'self'",
+      "https://cloudflareinsights.com",
+    ]);
+    assert.deepEqual(directives.get("object-src"), ["'none'"]);
+    assert.deepEqual(directives.get("base-uri"), ["'none'"]);
+    assert.deepEqual(directives.get("form-action"), ["'none'"]);
+    assert.deepEqual(directives.get("frame-ancestors"), ["'none'"]);
+    assert.deepEqual(directives.get("style-src-attr"), ["'unsafe-inline'"]);
+    for (const [name, allowed] of [
+      ["script-src", ["'self'", "https://static.cloudflareinsights.com"]],
+      ["style-src", ["'self'"]],
+    ]) {
+      const tokens = directives.get(name) ?? [];
+      for (const token of allowed) {
+        assert.ok(tokens.includes(token), `${name} is missing ${token}`);
+      }
+      for (const token of tokens) {
+        assert.ok(
+          allowed.includes(token) || token.startsWith("'sha256-"),
+          `${name} has an unexpected token ${token}`,
+        );
+      }
+    }
+  });
+
+  test("script-src never allows unsafe-inline or unsafe-eval, and nothing allows unsafe-eval", () => {
+    const scripts = parseCsp(csp()).get("script-src") ?? [];
+    assert.ok(
+      !scripts.includes("'unsafe-inline'"),
+      "script-src has unsafe-inline",
+    );
+    assert.ok(!csp().includes("'unsafe-eval'"), "the CSP has unsafe-eval");
+  });
+
+  test("the built HTML has no inline event handler attributes", () => {
+    for (const file of htmlFiles()) {
+      assert.doesNotMatch(
+        readFileSync(file, "utf8"),
+        /\son[a-z]+="/i,
+        `${file} has an inline event handler`,
+      );
+    }
+  });
+
+  test("hashed assets exist under /_astro/", () => {
+    assert.ok(existsSync(join(root, "dist", "_astro")), "expected dist/_astro");
+  });
+
+  test("404.html, sitemap.xml, robots.txt, favicon.svg and og.png exist in dist", () => {
+    for (const file of [
+      "404.html",
+      "sitemap.xml",
+      "robots.txt",
+      "favicon.svg",
+      "og.png",
+    ]) {
+      assert.ok(existsSync(distPath(file)), `expected dist/${file}`);
+    }
+  });
+
+  test("index.html has exactly one canonical link to the home URL", () => {
+    const canonicals = head().match(/<link\b[^>]*rel="canonical"[^>]*>/g) ?? [];
+    assert.equal(canonicals.length, 1, "expected exactly one canonical");
+    assert.match(canonicals[0], new RegExp(`href="${SITE}/"`));
+  });
+
+  test("the title and description are the approved Metadata", () => {
+    assert.ok(
+      head().includes(
+        "<title>Hemang Khatri · Backend engineer and app builder</title>",
+      ),
+      "expected the approved title",
+    );
+    assert.equal(
+      metaContent(head(), "name", "description"),
+      "Portfolio of Hemang Khatri: fast native apps and backend tools, including markuli, Mnemora and localAIWrapper.",
+    );
+  });
+
+  test("Open Graph tags are complete, with an absolute https image", () => {
+    const page = head();
+    assert.equal(metaContent(page, "property", "og:type"), "website");
+    assert.equal(
+      metaContent(page, "property", "og:title"),
+      "Hemang Khatri · Backend engineer and app builder",
+    );
+    assert.equal(
+      metaContent(page, "property", "og:description"),
+      "Portfolio of Hemang Khatri: fast native apps and backend tools, including markuli, Mnemora and localAIWrapper.",
+    );
+    assert.equal(metaContent(page, "property", "og:url"), `${SITE}/`);
+    const images = metaTags(page).filter((tag) =>
+      /property="og:image"/.test(tag),
+    );
+    assert.equal(images.length, 1, "expected exactly one og:image");
+    assert.equal(metaContent(page, "property", "og:image"), `${SITE}/og.png`);
+    assert.equal(metaContent(page, "property", "og:image:width"), "1200");
+    assert.equal(metaContent(page, "property", "og:image:height"), "630");
+    assert.equal(
+      metaContent(page, "property", "og:image:alt"),
+      "Hemang Khatri: fast native apps and the backends behind them. markuli, Mnemora, localAIWrapper.",
+    );
+  });
+
+  test("Twitter card is summary_large_image with title, description and image", () => {
+    const page = head();
+    assert.equal(
+      metaContent(page, "name", "twitter:card"),
+      "summary_large_image",
+    );
+    assert.ok(
+      metaContent(page, "name", "twitter:title"),
+      "expected twitter:title",
+    );
+    assert.ok(
+      metaContent(page, "name", "twitter:description"),
+      "expected twitter:description",
+    );
+    assert.equal(metaContent(page, "name", "twitter:image"), `${SITE}/og.png`);
+  });
+
+  test("theme-color is set for light and dark through media attributes", () => {
+    const themeColors = metaTags(head()).filter((tag) =>
+      /name="theme-color"/.test(tag),
+    );
+    assert.equal(themeColors.length, 2, "expected two theme-color metas");
+    assert.ok(
+      themeColors.some(
+        (tag) =>
+          tag.includes('content="#fbf9ff"') &&
+          tag.includes('media="(prefers-color-scheme: light)"'),
+      ),
+      "expected the light theme-color",
+    );
+    assert.ok(
+      themeColors.some(
+        (tag) =>
+          tag.includes('content="#0d0a1c"') &&
+          tag.includes('media="(prefers-color-scheme: dark)"'),
+      ),
+      "expected the dark theme-color",
+    );
+  });
+
+  test("the SVG favicon is linked", () => {
+    assert.ok(
+      head().includes(
+        '<link rel="icon" type="image/svg+xml" href="/favicon.svg"',
+      ),
+      "expected the SVG favicon link",
+    );
+  });
+
+  test("favicon.svg is paths only: a gradient and an H, with no text or fonts", () => {
+    const svg = readDist("favicon.svg");
+    assert.match(svg, /<svg\b/);
+    assert.match(svg, /linearGradient/);
+    assert.match(svg, /<path\b/);
+    assert.doesNotMatch(svg, /<text\b|font-family|@font-face/i);
+  });
+
+  test("the Person JSON-LD parses, has exactly the approved keys, and no email or phone", () => {
+    const blocks = [
+      ...head().matchAll(
+        /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g,
+      ),
+    ];
+    assert.equal(blocks.length, 1, "expected one JSON-LD block");
+    const data = JSON.parse(blocks[0][1]);
+    assert.deepEqual(Object.keys(data).sort(), [
+      "@context",
+      "@type",
+      "jobTitle",
+      "name",
+      "sameAs",
+      "url",
+    ]);
+    assert.equal(data["@type"], "Person");
+    assert.equal(data.name, "Hemang Khatri");
+    assert.equal(data.jobTitle, "Software Engineer");
+    assert.equal(data.url, `${SITE}/`);
+    assert.deepEqual(data.sameAs, ["https://github.com/khatrihemang07"]);
+    assert.doesNotMatch(blocks[0][1], /email|telephone|mailto:/i);
+    assert.doesNotMatch(blocks[0][1], /\+?\d[\d ().-]{6,}\d/);
+  });
+
+  test("the 404 page is branded, noindex, and links home with the approved copy", () => {
+    const page = readDist("404.html");
+    assert.equal(metaContent(page, "name", "robots"), "noindex");
+    const heading = page.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)?.[1] ?? "";
+    assert.equal(heading.replace(/<[^>]*>/g, "").trim(), "Nothing here.");
+    assert.match(page, /<a [^>]*href="\/"[^>]*>\s*Back to the work\.\s*<\/a>/);
+    assert.match(page, /class="[^"]*\btile\b[^"]*"/, "expected a glass tile");
+  });
+
+  test("sitemap.xml is a valid sitemap with the home URL only and no lastmod", () => {
+    const xml = readDist("sitemap.xml");
+    assert.match(xml, /^<\?xml version="1\.0" encoding="UTF-8"\?>/);
+    assert.match(
+      xml,
+      /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/,
+    );
+    assert.equal(xml.match(/<url>/g)?.length, 1, "expected one url entry");
+    assert.ok(xml.includes(`<loc>${SITE}/</loc>`), "expected the home URL");
+    assert.doesNotMatch(xml, /lastmod/);
+  });
+
+  test("robots.txt allows all crawlers and points at the sitemap", () => {
+    const robots = readDist("robots.txt");
+    assert.match(robots, /^User-agent: \*$/m);
+    assert.match(robots, /^Allow: \/$/m);
+    assert.match(robots, new RegExp(`^Sitemap: ${SITE}/sitemap\\.xml$`, "m"));
+  });
+
+  test("transfer budget: gzip (level 9) of dist html, css, js and woff2 is at most 150,000 bytes", () => {
+    const files = walkFiles(join(root, "dist")).filter((file) =>
+      /\.(html|css|js|woff2)$/.test(file),
+    );
+    const sizes = files.map((file) => [
+      file.slice(join(root, "dist").length + 1),
+      gzipSync(readFileSync(file), { level: 9 }).length,
+    ]);
+    const total = sizes.reduce((sum, [, size]) => sum + size, 0);
+    assert.ok(
+      total <= 150_000,
+      `transfer is ${total} bytes gzip, over the 150,000 budget:\n${sizes
+        .map(([name, size]) => `${size}\t${name}`)
+        .join("\n")}`,
+    );
   });
 });

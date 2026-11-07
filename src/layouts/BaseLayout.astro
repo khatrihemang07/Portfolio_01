@@ -4,11 +4,35 @@ import frauncesUrl from "@fontsource-variable/fraunces/files/fraunces-latin-wght
 import interUrl from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 
 interface Props {
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
+  // Pages that must not be indexed (the 404) set this; they get no canonical link.
+  noindex?: boolean;
 }
 
-const { title, description } = Astro.props;
+const siteTitle = "Hemang Khatri · Backend engineer and app builder";
+const siteDescription =
+  "Portfolio of Hemang Khatri: fast native apps and backend tools, including markuli, Mnemora and localAIWrapper.";
+const ogImageAlt =
+  "Hemang Khatri: fast native apps and the backends behind them. markuli, Mnemora, localAIWrapper.";
+
+const {
+  title = siteTitle,
+  description = siteDescription,
+  noindex = false,
+} = Astro.props;
+
+const home = new URL("/", Astro.site);
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL("/og.png", Astro.site).href;
+const person = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Hemang Khatri",
+  url: home.href,
+  jobTitle: "Software Engineer",
+  sameAs: ["https://github.com/khatrihemang07"],
+};
 ---
 
 <!doctype html>
@@ -32,9 +56,26 @@ const { title, description } = Astro.props;
     <link rel="preload" href={interUrl} as="font" type="font/woff2" crossorigin />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={ogImageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="theme-color" content="#fbf9ff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d0a1c" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(person)}></script>
   </head>
   <body>
-    <a class="skip-link" href="#work">Skip to work</a>
+    <a class="skip-link" href="#main">Skip to content</a>
     <slot />
   </body>
 </html>

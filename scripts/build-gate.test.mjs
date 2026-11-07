@@ -414,15 +414,19 @@ describe("built full page: look, feel and content", () => {
     assert.match(link, /href="#contact"/);
   });
 
-  test("two Stat Tiles: 3 public projects, and Rust · Go · TS what I build with", () => {
-    const values = [
-      ...page().matchAll(/<[^>]*class="stat-value"[^>]*>([\s\S]*?)<\/[^>]+>/g),
+  test("the Hero shows two small Hero Chips, inside the intro: 3 public projects, and Rust · Go · TS", () => {
+    const chips = [
+      ...page().matchAll(/<li[^>]*class="hero-chip"[^>]*>([\s\S]*?)<\/li>/g),
     ].map((match) => textOf(match[1]));
-    const labels = [
-      ...page().matchAll(/<[^>]*class="stat-label"[^>]*>([\s\S]*?)<\/[^>]+>/g),
-    ].map((match) => textOf(match[1]));
-    assert.deepEqual(values, ["3", "Rust · Go · TS"]);
-    assert.deepEqual(labels, ["public projects", "what I build with"]);
+    assert.deepEqual(chips, ["3 public projects", "Rust · Go · TS"]);
+    const intro = page().match(
+      /<div class="hero-intro[^"]*"[\s\S]*?<\/header>/,
+    )?.[0];
+    assert.ok(
+      intro?.includes("hero-chip"),
+      "chips live inside the intro block",
+    );
+    assert.ok(!/stat-tile|stat-value/.test(page()), "no big Stat Tiles remain");
   });
 
   test("sections work, about and contact exist with their headings", () => {
@@ -1117,5 +1121,388 @@ describe("launch hardening: built release output", () => {
         .map(([name, size]) => `${size}\t${name}`)
         .join("\n")}`,
     );
+  });
+});
+
+// Aurora, glass and motion: what the owner reviewed, checked through the built CSS and HTML.
+describe("built look and motion: aurora, glass, reveals and Dock", () => {
+  before(() => {
+    const result = buildOnce();
+    assert.equal(
+      result.status,
+      0,
+      `astro build failed\n${result.stdout}\n${result.stderr}`,
+    );
+  });
+
+  const flat = () => builtCss().replace(/\s+/g, "");
+  // Every top-level or nested style rule as [selector, body], read from minified CSS.
+  const rulesOf = (css) =>
+    [...css.matchAll(/([^{}@;][^{}]*)\{([^{}]*)\}/g)].map((match) => [
+      match[1],
+      match[2],
+    ]);
+  const ruleBodies = (css, selectorPart) =>
+    rulesOf(css)
+      .filter(([selector]) => selector.includes(selectorPart))
+      .map(([, body]) => body);
+  const navOf = (label) =>
+    page().match(
+      new RegExp(`<nav[^>]*aria-label="${label}"[\\s\\S]*?</nav>`),
+    )?.[0] ?? "";
+
+  const rgb = (hex) =>
+    [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
+  const luminance = (channels) => {
+    const [r, g, b] = channels.map((value) => {
+      const c = value / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const contrast = (a, b) => {
+    const [hi, lo] = [luminance(rgb(a)), luminance(rgb(b))].sort(
+      (x, y) => y - x,
+    );
+    return (hi + 0.05) / (lo + 0.05);
+  };
+  // Token values for one theme, read from the first rule that declares --muted after the marker.
+  const tokensFor = (marker) => {
+    const css = flat();
+    const start = css.indexOf(marker);
+    assert.ok(start > -1, `expected ${marker} in the built CSS`);
+    const body = css.slice(start, css.indexOf("}", start));
+    const token = (name) =>
+      body.match(new RegExp(`--${name}:(#[0-9a-fA-F]{6})`))?.[1];
+    return {
+      bg: token("bg"),
+      fg: token("fg"),
+      muted: token("muted"),
+      mesh: ["violet", "pink", "amber", "mint"].map((n) => token(`mesh-${n}`)),
+    };
+  };
+
+  test("the aurora does not use a fixed background attachment", () => {
+    assert.ok(!/background-attachment:fixed/.test(flat()));
+  });
+
+  test("the aurora is its own fixed, non-interactive layer behind the page", () => {
+    const layers = ruleBodies(flat(), "body:before").concat(
+      ruleBodies(flat(), "body::before"),
+    );
+    assert.ok(layers.length > 0, "expected a body::before aurora layer");
+    const layer = layers.join(";");
+    assert.match(layer, /position:fixed/);
+    assert.match(layer, /inset:0/);
+    assert.match(layer, /z-index:-1/);
+    assert.match(layer, /pointer-events:none/);
+    assert.match(layer, /radial-gradient/);
+    assert.match(layer, /will-change:transform|translateZ\(0\)|translate3d/);
+  });
+
+  test("the aurora does not animate", () => {
+    const layer = [
+      ...ruleBodies(flat(), "body:before"),
+      ...ruleBodies(flat(), "body::before"),
+    ].join(";");
+    assert.ok(!/animation/.test(layer), "the aurora must not drift");
+  });
+
+  test("backdrop-filter blur is used only on the Dock", () => {
+    const blurred = rulesOf(flat()).filter(([, body]) =>
+      /backdrop-filter:blur/.test(body),
+    );
+    assert.ok(blurred.length > 0, "expected the Dock to keep a real blur");
+    for (const [selector] of blurred) {
+      assert.match(selector, /\.dock-list/, `blur on ${selector}`);
+    }
+  });
+
+  test("tiles never transition or animate box-shadow, and hover only moves transform", () => {
+    for (const [selector, body] of rulesOf(flat())) {
+      if (!/\.tile|\.card/.test(selector)) continue;
+      const transition = body.match(/transition:[^;]*/)?.[0] ?? "";
+      assert.ok(
+        !/box-shadow|all/.test(transition),
+        `${selector} transitions ${transition}`,
+      );
+    }
+    const hover = ruleBodies(flat(), ".tile:hover").join(";");
+    assert.match(hover, /transform:/);
+    assert.ok(
+      !/box-shadow/.test(hover),
+      "hover must not set box-shadow on the tile",
+    );
+  });
+
+  test("the lifted shadow is pre-rendered on a pseudo-element whose opacity is faded", () => {
+    const base = ruleBodies(flat(), ".tile:after").concat(
+      ruleBodies(flat(), ".tile::after"),
+    );
+    assert.ok(
+      base.some((body) => /box-shadow:/.test(body) && /opacity:0/.test(body)),
+    );
+    const hover = ruleBodies(flat(), ".tile:hover:after").concat(
+      ruleBodies(flat(), ".tile:hover::after"),
+    );
+    assert.ok(hover.some((body) => /opacity:1/.test(body)));
+  });
+
+  test("spring easing is a linear() curve with a cubic-bezier fallback declared first", () => {
+    const css = flat();
+    const fallback = css.search(/--spring:cubic-bezier\(/);
+    const spring = css.search(/--spring:linear\(/);
+    assert.ok(fallback > -1, "expected a cubic-bezier --spring fallback");
+    assert.ok(spring > fallback, "expected linear() after the fallback");
+    assert.match(css, /@supports\(transition-timing-function:linear\(0,1\)\)/);
+  });
+
+  test("scroll reveals use view() timelines inside @supports, animating only transform-ish properties and opacity", () => {
+    const css = flat();
+    assert.match(css, /@supports\(animation-timeline:view\(\)\)/);
+    const supports = css.slice(
+      css.indexOf("@supports(animation-timeline:view())"),
+    );
+    assert.match(supports, /animation-timeline:view\(\)/);
+    assert.match(supports, /animation-range:/);
+    const keyframes = css.match(/@keyframesreveal\{[\s\S]*?\}\}/)?.[0] ?? "";
+    assert.ok(keyframes, "expected @keyframes reveal");
+    const properties = [...keyframes.matchAll(/([a-z-]+):/g)]
+      .map((match) => match[1])
+      .filter((name) => name !== "from" && name !== "to");
+    for (const name of properties) {
+      assert.ok(
+        ["opacity", "transform", "translate", "scale"].includes(name),
+        `reveal animates ${name}`,
+      );
+    }
+  });
+
+  test("reveals only run when motion is allowed, and are switched off under reduced motion", () => {
+    const allowed = mediaBlocks(
+      builtCss(),
+      "(prefers-reduced-motion: no-preference)",
+    ).join("");
+    assert.match(allowed, /animation-timeline:view\(\)/);
+    const reduced = mediaBlocks(
+      builtCss(),
+      "(prefers-reduced-motion: reduce)",
+    ).join("");
+    assert.match(reduced, /\.reveal[^{]*\{[^}]*animation:none/);
+  });
+
+  test("below-the-fold tiles opt in to reveals, the Hero does not", () => {
+    const html = page();
+    const revealed = [
+      ...html.matchAll(/<article\b[^>]*class="([^"]*)"/g),
+    ].filter((match) => /\breveal\b/.test(match[1]));
+    assert.equal(revealed.length, 3, "expected all three Cards to reveal");
+    assert.ok(/class="[^"]*\babout-tile\b[^"]*\breveal\b/.test(html));
+  });
+
+  test("the Hero name block and the Contact block sit on the aurora with no tile box", () => {
+    const html = page();
+    const h1Block = html.match(/<div class="([^"]*)"[^>]*>\s*<h1/)?.[1] ?? "";
+    assert.ok(h1Block, "expected the block that holds the h1");
+    assert.ok(!/\btile\b/.test(h1Block), `h1 block is a tile: ${h1Block}`);
+    const contactBlock =
+      html.match(/<section id="contact"[^>]*>\s*<div class="([^"]*)"/)?.[1] ??
+      "";
+    assert.ok(contactBlock);
+    assert.ok(
+      !/\btile\b/.test(contactBlock),
+      `Contact block is a tile: ${contactBlock}`,
+    );
+    for (const name of [h1Block.split(" ")[0], contactBlock.split(" ")[0]]) {
+      for (const body of ruleBodies(flat(), `.${name}`)) {
+        assert.ok(
+          !/box-shadow|backdrop-filter|border:1px/.test(body),
+          `.${name} has a box`,
+        );
+      }
+    }
+  });
+
+  test("muted and body text keep WCAG contrast on the page and on every aurora colour, in both themes", () => {
+    for (const marker of [
+      ":root{",
+      ":root[data-theme=dark]{",
+      ':root[data-theme="dark"]{',
+    ]) {
+      if (
+        !flat().includes(marker) ||
+        !/--mesh-violet/.test(
+          flat().slice(
+            flat().indexOf(marker),
+            flat().indexOf("}", flat().indexOf(marker)),
+          ),
+        )
+      )
+        continue;
+      const t = tokensFor(marker);
+      for (const surface of [t.bg, ...t.mesh]) {
+        assert.ok(
+          contrast(t.fg, surface) >= 4.5,
+          `fg on ${surface} in ${marker}`,
+        );
+        assert.ok(
+          contrast(t.muted, surface) >= 4.5,
+          `muted ${t.muted} on ${surface} in ${marker}`,
+        );
+      }
+    }
+    assert.ok(
+      flat().includes(":root[data-theme=dark]{") ||
+        flat().includes(':root[data-theme="dark"]{'),
+    );
+  });
+
+  test("every Dock link and the theme button carry a tooltip pill that is hidden from assistive tech", () => {
+    const dock = navOf("Dock");
+    const tips = [
+      ...dock.matchAll(/<span class="dock-tip"[^>]*>([^<]*)<\/span>/g),
+    ];
+    assert.deepEqual(
+      tips.map((match) => match[1]),
+      ["Top", "Work", "About", "Contact", "Theme"],
+    );
+    for (const tip of tips) assert.match(tip[0], /aria-hidden="true"/);
+    assert.match(dock, /aria-label="Toggle theme"/);
+    assert.equal((dock.match(/class="dock-label"/g) ?? []).length, 4);
+  });
+
+  test("tooltips appear on hover and focus-visible with opacity and transform only, never blur or pointer events", () => {
+    const css = flat();
+    const base = ruleBodies(css, ".dock-tip").join(";");
+    assert.match(base, /pointer-events:none/);
+    assert.match(base, /opacity:0/);
+    assert.ok(!/backdrop-filter/.test(base));
+    const hoverCapable = mediaBlocks(builtCss(), "(hover: hover)").join("");
+    assert.match(
+      hoverCapable,
+      /:hover\.dock-tip|:hover\s*\.dock-tip|a:hover\.dock-tip/,
+    );
+    assert.match(flat(), /:focus-visible\.dock-tip/);
+    for (const [selector, body] of rulesOf(css)) {
+      if (!selector.includes(".dock-tip")) continue;
+      const transition = body.match(/transition:[^;]*/)?.[0] ?? "";
+      assert.ok(
+        /^(transition:)?(opacity|transform|translate|scale|)/.test(
+          transition,
+        ) && !/width|height|margin|padding|left|top/.test(transition),
+        transition,
+      );
+    }
+  });
+
+  test("Hero Chips are quiet: small text, no glass tile, no display-size type", () => {
+    const css = flat();
+    const body = ruleBodies(css, ".hero-chip").join(";");
+    assert.ok(body, "expected a .hero-chip rule");
+    assert.ok(!/backdrop-filter|box-shadow/.test(body));
+    const size = body.match(/font-size:([^;]*)/)?.[1] ?? "";
+    assert.ok(/rem|var\(--text-(xs|sm)\)/.test(size), size);
+    assert.ok(!/--text-stat|clamp\(/.test(size), size);
+  });
+
+  test("keyboard focus shows the tooltip even on devices without hover", () => {
+    const hoverOnly = mediaBlocks(builtCss(), "(hover: hover)").join("");
+    assert.ok(
+      !/:focus-visible/.test(hoverOnly.split("{")[0] ?? "") &&
+        !/focus-visible[^{]*\.dock-tip/.test(hoverOnly),
+      "focus-visible tooltip rule is trapped inside (hover: hover)",
+    );
+    assert.match(flat(), /:focus-visible\.dock-tip/);
+  });
+
+  test("phones do not blur behind the Dock, to protect the mobile performance budget", () => {
+    const phone = [
+      ...mediaBlocks(builtCss(), "(max-width: 859.98px)"),
+      ...mediaBlocks(builtCss(), "(width<=859.98px)"),
+    ].join("");
+    assert.match(phone, /\.dock-list\{[^}]*backdrop-filter:none/);
+  });
+
+  test("printing leaves no tile hidden by a reveal", () => {
+    const print = mediaBlocks(builtCss(), "print").join("");
+    assert.match(print, /\.reveal\{[^}]*animation:none/);
+  });
+
+  test("the tooltip stays centred over its item in the built CSS, hidden and shown", () => {
+    // The minifier drops a standalone `translate: -50% 0` here, which left the
+    // tooltip half its width to the right. Centring must survive in `transform`.
+    const css = flat();
+    const bodies = rulesOf(css).filter(([selector]) =>
+      selector.includes(".dock-tip"),
+    );
+    const transforms = bodies
+      .map(([, body]) => body.match(/(?:^|;)transform:([^;]*)/)?.[1])
+      .filter(Boolean);
+    assert.ok(transforms.length >= 2, "hidden and shown transforms exist");
+    for (const transform of transforms) {
+      assert.match(transform, /^translate\(-50%/, transform);
+    }
+  });
+
+  test("a non-active Dock item is a fixed 44px circle and hover cannot widen it", () => {
+    const css = flat();
+    const item = ruleBodies(css, ".dock-lista,")
+      .concat(ruleBodies(css, ".dock-lista"))
+      .join(";");
+    assert.match(item, /height:var\(--touch-target\)|height:44px/);
+    assert.match(
+      item,
+      /min-width:var\(--touch-target\)|min-width:44px|width:44px/,
+    );
+    assert.match(
+      item,
+      /border-radius:var\(--radius-pill\)|border-radius:999px/,
+    );
+    assert.match(css, /--touch-target:44px/);
+    for (const [selector, body] of rulesOf(css)) {
+      if (
+        !/:hover/.test(selector) ||
+        !/\.dock-list|\.theme-toggle/.test(selector)
+      )
+        continue;
+      assert.ok(
+        !/width|padding|margin|gap|border-width/.test(body),
+        `${selector} must not change geometry on hover`,
+      );
+    }
+  });
+
+  test("the Dock highlight is not animated by a CSS width transition (the tracker follows real geometry)", () => {
+    const css = flat();
+    for (const [selector, body] of rulesOf(css)) {
+      if (!/\.dock-highlight/.test(selector)) continue;
+      assert.ok(
+        !/transition:[^;]*width/.test(body),
+        `${selector} transitions width`,
+      );
+    }
+  });
+
+  test("tooltips and springs are instant under reduced motion", () => {
+    const reduced = mediaBlocks(
+      builtCss(),
+      "(prefers-reduced-motion: reduce)",
+    ).join("");
+    assert.match(reduced, /\.dock-tip/);
+    assert.match(reduced, /transition:none/);
+  });
+
+  test("forced colors keep focus outlines and tooltips visible", () => {
+    const forced = mediaBlocks(builtCss(), "(forced-colors: active)").join("");
+    assert.match(forced, /\.dock-tip/);
+    assert.match(flat(), /:focus-visible\{outline:3pxsolid/);
+  });
+
+  test("no reveal or lift remains when the animation is unsupported: tiles have no hidden base state", () => {
+    const base = ruleBodies(flat(), ".reveal").filter(
+      (body) => !/animation/.test(body),
+    );
+    for (const body of base)
+      assert.ok(!/opacity:0/.test(body), "a .reveal base rule hides content");
   });
 });

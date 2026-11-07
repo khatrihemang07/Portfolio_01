@@ -35,46 +35,45 @@
 /*
  * Design tokens. Light is the default. Dark applies when the system is dark
  * and no manual choice is stored, or when data-theme="dark" is set.
- * Contrast: muted text clears 4.5:1 on every tint and mesh colour in both themes.
+ * Contrast (WCAG, computed): --fg is 8.3:1 or better and --muted 4.9:1 or better
+ * on the page colour, on every Aurora mesh colour and on the glass fills over them,
+ * in both themes. Text sits bare on the Aurora in the Hero and Contact, so the
+ * mesh colours are tuned to stay inside that, not just to look vivid.
  */
 :root {
   color-scheme: light;
 
   --bg: #fbf9ff;
-  --mesh-violet: #c9b8ff;
-  --mesh-pink: #ffc2d4;
-  --mesh-amber: #ffe0a8;
-  --mesh-mint: #b8f0e0;
+  --mesh-violet: #bba6ff;
+  --mesh-pink: #ff9dbd;
+  --mesh-amber: #ffcf7f;
+  --mesh-mint: #7fe6cb;
   --fg: #1d1535;
   --fg-inverse: #ffffff;
-  --muted: #5b5478;
-  --link: #5b3be0;
-  --glass: rgba(255, 255, 255, 0.55);
-  --edge: rgba(255, 255, 255, 0.85);
-  --shadow: 0 30px 60px -44px rgba(60, 30, 140, 0.55);
-  --shadow-lift: 0 36px 60px -34px rgba(124, 92, 255, 0.55);
+  --muted: #413a63;
+  --link: #3a1bb0;
+  --glass: rgba(255, 255, 255, 0.34);
+  --glass-dock: rgba(255, 255, 255, 0.55);
+  --chip: rgba(255, 255, 255, 0.45);
+  --edge: rgba(255, 255, 255, 0.9);
+  --shadow: 0 24px 50px -40px rgba(60, 30, 140, 0.5);
+  --shadow-lift: 0 34px 56px -30px rgba(90, 50, 220, 0.6);
+  --gradient-name: linear-gradient(90deg, #4a25d0, #b3135a, #8f3f00);
+  --tip-bg: #1d1535;
+  --tip-fg: #ffffff;
   --focus: #7c5cff;
 
   --tint-pink: rgba(255, 107, 139, 0.3);
   --tint-violet: rgba(124, 92, 255, 0.3);
   --tint-teal: rgba(0, 194, 168, 0.3);
   --tint-amber: rgba(255, 176, 46, 0.35);
-  --hero-wash: linear-gradient(
-    135deg,
-    rgba(124, 92, 255, 0.22),
-    rgba(255, 77, 141, 0.18) 60%,
-    rgba(255, 176, 46, 0.22)
-  );
-  --contact-wash: linear-gradient(
-    135deg,
-    rgba(124, 92, 255, 0.25),
-    rgba(255, 77, 141, 0.22),
-    rgba(255, 176, 46, 0.25)
-  );
-  --gradient-accent: linear-gradient(90deg, #7c5cff, #ff4d8d, #ff9a3d);
   --gradient-cta: linear-gradient(90deg, #6a45f0, #c2306a);
 
   --glass-blur: 18px;
+
+  /* Spring easing: a cubic-bezier fallback first, a damped-spring linear() where supported. */
+  --spring: cubic-bezier(0.34, 1.4, 0.5, 1);
+  --spring-settle: cubic-bezier(0.2, 0.9, 0.3, 1);
 
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-body:
@@ -88,7 +87,6 @@
   --text-lede: 1.15rem;
   --text-about: 1.1rem;
   --text-card-title: 1.9rem;
-  --text-stat: clamp(1.9rem, 4vw, 2.6rem);
   --text-name: clamp(3rem, 8vw, 6rem);
   --text-contact: clamp(2rem, 6vw, 3.6rem);
 
@@ -105,8 +103,8 @@
   --radius-inner: 16px;
   --radius-pill: 999px;
 
-  --gap: 14px;
-  --tile-pad: 20px;
+  --gap: 20px;
+  --tile-pad: 22px;
   --page-gutter: 16px;
   --content-max: 1120px;
   --touch-target: 44px;
@@ -117,18 +115,27 @@
   :root:not([data-theme]) {
     color-scheme: dark;
     --bg: #0d0a1c;
-    --mesh-violet: #4a2fb8;
-    --mesh-pink: #a8244f;
-    --mesh-amber: #a3631a;
-    --mesh-mint: #0f7a66;
+    --mesh-violet: #4d2cc4;
+    --mesh-pink: #a82058;
+    --mesh-amber: #7d4a0e;
+    --mesh-mint: #0a6454;
     --fg: #f2eeff;
     --fg-inverse: #0d0a1c;
-    --muted: #b7b0d6;
-    --link: #c4b8ff;
-    --glass: rgba(30, 24, 60, 0.55);
-    --edge: rgba(255, 255, 255, 0.14);
-    --shadow: 0 30px 60px -44px rgba(0, 0, 0, 0.7);
-    --shadow-lift: 0 36px 60px -34px rgba(124, 92, 255, 0.6);
+    --muted: #dcd8f4;
+    --link: #d3c9ff;
+    --glass: rgba(14, 10, 32, 0.42);
+    --glass-dock: rgba(14, 10, 32, 0.6);
+    --chip: rgba(255, 255, 255, 0.1);
+    --edge: rgba(255, 255, 255, 0.24);
+    --shadow: 0 24px 50px -40px rgba(0, 0, 0, 0.8);
+    --shadow-lift: 0 34px 56px -30px rgba(150, 120, 255, 0.55);
+    --gradient-name: linear-gradient(90deg, #c3b3ff, #ff9cc2, #ffc98a);
+    --tint-pink: rgba(255, 107, 139, 0.18);
+    --tint-violet: rgba(124, 92, 255, 0.22);
+    --tint-teal: rgba(0, 194, 168, 0.18);
+    --tint-amber: rgba(255, 176, 46, 0.18);
+    --tip-bg: #f2eeff;
+    --tip-fg: #0d0a1c;
     --focus: #a993ff;
   }
 }
@@ -136,18 +143,27 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
   --bg: #0d0a1c;
-  --mesh-violet: #4a2fb8;
-  --mesh-pink: #a8244f;
-  --mesh-amber: #a3631a;
-  --mesh-mint: #0f7a66;
+  --mesh-violet: #4d2cc4;
+  --mesh-pink: #a82058;
+  --mesh-amber: #7d4a0e;
+  --mesh-mint: #0a6454;
   --fg: #f2eeff;
   --fg-inverse: #0d0a1c;
-  --muted: #b7b0d6;
-  --link: #c4b8ff;
-  --glass: rgba(30, 24, 60, 0.55);
-  --edge: rgba(255, 255, 255, 0.14);
-  --shadow: 0 30px 60px -44px rgba(0, 0, 0, 0.7);
-  --shadow-lift: 0 36px 60px -34px rgba(124, 92, 255, 0.6);
+  --muted: #dcd8f4;
+  --link: #d3c9ff;
+  --glass: rgba(14, 10, 32, 0.42);
+  --glass-dock: rgba(14, 10, 32, 0.6);
+  --chip: rgba(255, 255, 255, 0.1);
+  --edge: rgba(255, 255, 255, 0.24);
+  --shadow: 0 24px 50px -40px rgba(0, 0, 0, 0.8);
+  --shadow-lift: 0 34px 56px -30px rgba(150, 120, 255, 0.55);
+  --gradient-name: linear-gradient(90deg, #c3b3ff, #ff9cc2, #ffc98a);
+  --tint-pink: rgba(255, 107, 139, 0.18);
+  --tint-violet: rgba(124, 92, 255, 0.22);
+  --tint-teal: rgba(0, 194, 168, 0.18);
+  --tint-amber: rgba(255, 176, 46, 0.18);
+  --tip-bg: #f2eeff;
+  --tip-fg: #0d0a1c;
   --focus: #a993ff;
 }
 
@@ -161,16 +177,27 @@ body {
   min-height: 100vh;
   color: var(--fg);
   background-color: var(--bg);
-  background-image:
-    radial-gradient(60vw 50vh at 12% 6%, var(--mesh-violet) 0, transparent 60%),
-    radial-gradient(55vw 55vh at 92% 18%, var(--mesh-pink) 0, transparent 60%),
-    radial-gradient(60vw 60vh at 72% 88%, var(--mesh-amber) 0, transparent 60%),
-    radial-gradient(50vw 50vh at 4% 82%, var(--mesh-mint) 0, transparent 60%);
-  background-attachment: fixed;
   font-family: var(--font-body);
   font-size: var(--text-base);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Aurora: one fixed compositor layer behind the page. It is painted once and
+   never animated, so scrolling only moves the tiles over it. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  will-change: transform;
+  transform: translateZ(0);
+  background:
+    radial-gradient(75vw 65vh at 10% 4%, var(--mesh-violet) 0, transparent 70%),
+    radial-gradient(70vw 70vh at 96% 16%, var(--mesh-pink) 0, transparent 70%),
+    radial-gradient(75vw 75vh at 74% 96%, var(--mesh-amber) 0, transparent 70%),
+    radial-gradient(65vw 65vh at 2% 86%, var(--mesh-mint) 0, transparent 70%);
 }
 
 main {
@@ -229,7 +256,8 @@ ul {
   top: var(--space-4);
 }
 
-/* Glass tiles */
+/* Glass tiles: cheap fake glass (translucent fill and a bright edge, no blur) so
+   the Aurora shows through. Only the Dock blurs for real. */
 .tile {
   position: relative;
   box-sizing: border-box;
@@ -240,11 +268,18 @@ ul {
   background:
     linear-gradient(135deg, var(--tint, transparent), transparent 70%),
     var(--glass);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  backdrop-filter: blur(var(--glass-blur));
   box-shadow: var(--shadow);
-  animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
-  animation-delay: calc(var(--i, 0) * 90ms);
+}
+
+/* The lifted shadow is drawn once on a pseudo-element; hover only fades its opacity. */
+.tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--shadow-lift);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .tint-pink {
@@ -263,6 +298,12 @@ ul {
   --tint: var(--tint-amber);
 }
 
+/* Load-in for the Hero, which is above the fold. */
+.rise {
+  animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -275,16 +316,83 @@ ul {
   }
 }
 
+/* Scroll reveals: tiles below the fold ease in as they enter the viewport. Pure CSS,
+   transform and opacity only. Unsupported browsers and reduced motion see them as normal. */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    translate: 0 36px;
+    scale: 0.97;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+  }
+}
+
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --spring: linear(
+      0,
+      0.056,
+      0.193,
+      0.371,
+      0.557,
+      0.729,
+      0.873,
+      0.984,
+      1.06,
+      1.105,
+      1.124,
+      1.124,
+      1.111,
+      1.091,
+      1.067,
+      1.044,
+      1.024,
+      1.008,
+      0.996,
+      0.989,
+      0.985,
+      0.984,
+      0.985,
+      0.987,
+      0.99,
+      0.993,
+      0.996,
+      0.998,
+      1
+    );
+  }
+}
+
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .tile {
-    transition:
-      transform 0.25s ease,
-      box-shadow 0.25s ease;
+    transition: transform 0.6s var(--spring);
+  }
+
+  .tile::after {
+    transition: opacity 0.35s ease;
   }
 
   .tile:hover {
     transform: translateY(-4px);
-    box-shadow: var(--shadow-lift);
+  }
+
+  .tile:hover::after {
+    opacity: 1;
   }
 }
 
@@ -295,15 +403,13 @@ ul {
   gap: var(--gap);
 }
 
-/* Hero */
-.name-tile {
+/* Hero: the name block sits directly on the Aurora, with no tile box. */
+.hero-intro {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: var(--space-8);
-  background:
-    linear-gradient(135deg, transparent, transparent 70%), var(--hero-wash),
-    var(--glass);
+  padding: var(--tile-pad) var(--space-2) var(--tile-pad) var(--space-1);
 }
 
 h1 {
@@ -317,7 +423,7 @@ h1 span {
   display: block;
   font-style: italic;
   font-weight: 400;
-  background: var(--gradient-accent);
+  background: var(--gradient-name);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -358,24 +464,25 @@ h1 span {
   }
 }
 
-.stat-tile {
+/* Hero Chips: two quiet facts under the intro. They must not compete with the name. */
+.hero-chips {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: var(--space-3);
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  padding: 0;
+  list-style: none;
 }
 
-.stat-value {
-  font-family: var(--font-display);
-  font-size: var(--text-stat);
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-.stat-label {
-  font-size: var(--text-sm);
+.hero-chip {
+  padding: 4px 12px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-pill);
+  background: var(--glass);
   color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 /* Section headings */
@@ -435,7 +542,7 @@ h1 span {
   padding: 5px 11px;
   border: 1px solid var(--edge);
   border-radius: var(--radius-pill);
-  background: var(--glass);
+  background: var(--chip);
   color: var(--fg);
   font-size: 0.8rem;
   font-weight: 600;
@@ -498,16 +605,13 @@ h1 span {
 }
 
 /* Contact */
-.contact-tile {
+.contact-block {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-6);
   padding: var(--space-10) var(--space-5);
   text-align: center;
-  background:
-    linear-gradient(135deg, transparent, transparent 70%), var(--contact-wash),
-    var(--glass);
 }
 
 .contact-title {
@@ -578,12 +682,13 @@ h1 span {
   padding: 6px;
   border: 1px solid var(--edge);
   border-radius: var(--radius-pill);
-  background: var(--glass);
+  background: var(--glass-dock);
   -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   box-shadow: var(--shadow);
 }
 
+/* The highlight is positioned by the tracker from the active item's real geometry. */
 .dock-highlight {
   position: absolute;
   top: 6px;
@@ -594,15 +699,19 @@ h1 span {
   background: var(--gradient-cta);
 }
 
+/* Every item is exactly 44px tall. Collapsed, it is exactly 44px wide too
+   (12px + 20px icon + 12px): a circle. Only the active item grows, by its label. */
 .dock-list a,
 .theme-toggle {
   position: relative;
   z-index: 1;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-width: var(--touch-target);
-  min-height: var(--touch-target);
-  padding: 0 var(--space-3);
+  height: var(--touch-target);
+  padding: 0 12px;
   border: 0;
   border-radius: var(--radius-pill);
   background: none;
@@ -631,6 +740,30 @@ h1 span {
   margin-left: var(--space-2);
 }
 
+/* Tooltip: a compact pill above the Dock, centred on its item. It sits outside the
+   Dock's flow, so it never changes the Dock's width or moves a neighbour. */
+.dock-tip {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--tip-bg);
+  color: var(--tip-fg);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-50%, 6px) scale(0.92);
+  pointer-events: none;
+}
+
+.dock-list a[aria-current="true"] .dock-tip {
+  display: none;
+}
+
 .icon {
   flex: none;
   width: 20px;
@@ -653,6 +786,19 @@ h1 span {
     color: var(--fg);
     background: var(--tint-violet);
   }
+
+  .theme-toggle:hover .dock-tip,
+  .dock-list a:hover .dock-tip {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Keyboard focus shows the label on every device, hover-capable or not. */
+.theme-toggle:focus-visible .dock-tip,
+.dock-list a:focus-visible .dock-tip {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 /* Ruler: slim ticks on the right edge, one per section and per Featured Project. */
@@ -725,16 +871,16 @@ h1 span {
     scroll-behavior: smooth;
   }
 
-  .dock[data-ready] .dock-highlight {
-    transition:
-      transform 0.45s cubic-bezier(0.3, 1.2, 0.4, 1),
-      width 0.45s cubic-bezier(0.3, 1.2, 0.4, 1);
-  }
-
   .dock-label {
     transition:
-      max-width 0.35s ease,
-      margin-left 0.35s ease;
+      max-width 0.35s var(--spring-settle),
+      margin-left 0.35s var(--spring-settle);
+  }
+
+  .dock-tip {
+    transition:
+      opacity 0.18s ease,
+      transform 0.45s var(--spring);
   }
 
   .tick-bar {
@@ -756,22 +902,23 @@ h1 span {
   }
 }
 
-/* Phones: no backdrop blur and a background that scrolls with the page. The blur
-   is cheap on a desktop GPU but cost about 1.4 s of main-thread time in a
-   throttled mobile Lighthouse run; the translucent tiles keep the look. */
+/* Phones: the Ruler is hidden; the Dock is the only navigation. */
 @media (max-width: 859.98px) {
-  .tile,
+  .ruler {
+    display: none;
+  }
+
+  /* One small blur still cost main-thread time in a throttled mobile run (#7). */
   .dock-list {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
+}
 
-  body {
-    background-attachment: scroll;
-  }
-
-  .ruler {
-    display: none;
+/* Print: scroll-driven reveals would leave off-screen tiles at opacity 0. */
+@media print {
+  .reveal {
+    animation: none;
   }
 }
 
@@ -787,14 +934,9 @@ h1 span {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
-  .name-tile {
-    grid-column: span 4;
-    grid-row: span 2;
+  .hero-intro {
+    grid-column: 1 / -1;
     min-height: 340px;
-  }
-
-  .stat-tile {
-    grid-column: span 2;
   }
 
   .card {
@@ -818,9 +960,11 @@ h1 span {
   }
 }
 
-/* Reduced motion: no load-in, no lift, no transitions. Tiles stay visible. */
+/* Reduced motion: no load-in, reveal, lift or spring. Everything stays visible. */
 @media (prefers-reduced-motion: reduce) {
   .tile,
+  .rise,
+  .reveal,
   .cta,
   .links a {
     animation: none;
@@ -828,18 +972,24 @@ h1 span {
     transform: none;
   }
 
+  .tile::after,
+  .tile:hover::after {
+    transition: none;
+  }
+
   .tile:hover,
   .cta:hover {
     transform: none;
   }
 
-  /* Dock and Ruler: no sliding highlight, label or tick animation; jumps are instant. */
+  /* Dock and Ruler: no sliding highlight, label, tooltip or tick animation; jumps are instant. */
   html {
     scroll-behavior: auto;
   }
 
   .dock-highlight,
   .dock-label,
+  .dock-tip,
   .tick-bar,
   .tick-label {
     transition: none;
@@ -847,6 +997,12 @@ h1 span {
 }
 
 @media (forced-colors: active) {
+  .dock-tip {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+
   h1 span {
     background: none;
     color: CanvasText;

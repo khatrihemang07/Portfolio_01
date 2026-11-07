@@ -24,13 +24,21 @@ _Avoid_: Panel, thumbnail
 The floating navigation pill at the bottom of the Site, with a highlight that slides to the current section and a theme toggle. It is the only navigation on small screens.
 _Avoid_: Side Nav, sidebar, menu, header
 
+**Dock Tooltip**:
+The small label pill that appears above a Dock item on hover or keyboard focus, naming it ("Work", "Theme"). The current item shows its label inline instead.
+_Avoid_: Popover, title attribute
+
+**Aurora**:
+The soft multicolour glow behind the whole Site, one fixed layer that never moves or animates. The Hero and Contact text sit directly on it; Cards are translucent glass over it.
+_Avoid_: Background, gradient, mesh
+
 **Ruler**:
 The slim row of ticks on the right edge of the Site, one per section and one per Featured Project, with the current tick stretched and labelled. Hidden on small screens.
 _Avoid_: Scrollbar, progress bar, side nav
 
-**Stat Tile**:
-A small tile in the Hero showing one headline number or phrase about the owner's work, next to the name tile.
-_Avoid_: Badge, counter, widget
+**Hero Chip**:
+A small quiet pill under the Hero's Call to Action stating one fact about the owner's work (the project count, the stack). It must never outweigh the name and intro. Replaces the earlier large Stat Tiles.
+_Avoid_: Stat Tile, badge, counter, widget
 
 **Fact**:
 A concrete, checkable claim on a Card, such as a size or a measured resource use. Each Card has two.

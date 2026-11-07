@@ -14,7 +14,7 @@ const { project, eager = false, wide = false, tint = "violet", index = 0 } = Ast
 const { data } = project;
 ---
 
-<article id={`project-${project.id}`} class:list={["tile card", `tint-${tint}`, wide && "card-wide"]} style={`--i: ${index}`}>
+<article id={`project-${project.id}`} class:list={["tile card reveal", `tint-${tint}`, wide && "card-wide"]} style={`--i: ${index}`}>
   <Picture
     src={data.image}
     alt={data.alt}

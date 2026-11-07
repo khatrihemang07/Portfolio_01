@@ -8,8 +8,8 @@ Copy approved by the owner on 2026-11-07. Remaining **[write after capture]** it
 - Name tile: **Hemang Khatri**
 - Lede: I build fast, small tools: native apps and the backends behind them. Backend engineer by day, Rust tinkerer by night.
 - Call to Action: **Available for work and projects** (links to Contact)
-- Stat Tile 1: **3** / public projects
-- Stat Tile 2: **Rust · Go · TS** / what I build with
+- Hero Chip 1: **3 public projects**
+- Hero Chip 2: **Rust · Go · TS**
 
 ## Work: Cards (order: markuli, Mnemora, localAIWrapper)
 

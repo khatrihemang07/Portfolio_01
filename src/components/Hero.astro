@@ -1,6 +1,6 @@
 ---
 interface Props {
-  // How many Featured Projects are shown, so the Stat Tile always matches the Work section.
+  // How many Featured Projects are shown, so the Hero Chip always matches the Work section.
   projectCount: number;
 }
 
@@ -8,19 +8,15 @@ const { projectCount } = Astro.props;
 ---
 
 <header id="top" class="hero bento">
-  <div class="tile name-tile" style="--i: 0">
+  <div class="hero-intro rise" style="--i: 0">
     <h1>Hemang <span>Khatri</span></h1>
     <div>
       <p class="lede">I build fast, small tools: native apps and the backends behind them. Backend engineer by day, Rust tinkerer by night.</p>
       <a class="cta" href="#contact">Available for work and projects</a>
+      <ul class="hero-chips" role="list">
+        <li class="hero-chip">{projectCount} public {projectCount === 1 ? "project" : "projects"}</li>
+        <li class="hero-chip">Rust · Go · TS</li>
+      </ul>
     </div>
-  </div>
-  <div class="tile stat-tile tint-amber" style="--i: 1">
-    <p class="stat-value">{projectCount}</p>
-    <p class="stat-label">public projects</p>
-  </div>
-  <div class="tile stat-tile tint-teal" style="--i: 2">
-    <p class="stat-value">Rust · Go · TS</p>
-    <p class="stat-label">what I build with</p>
   </div>
 </header>

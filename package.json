@@ -13,7 +13,7 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "test": "node --test scripts/build-gate.test.mjs",
-    "verify": "pnpm run check && pnpm run lint && pnpm run build"
+    "verify": "pnpm run check && pnpm run lint && pnpm run build && pnpm run test"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.12",

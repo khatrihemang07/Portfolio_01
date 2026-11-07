@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -8,22 +8,6 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const contentDir = join(root, "src", "content", "projects");
 const invalidFile = join(contentDir, "zz-gate-invalid.yaml");
-
-const markuliYaml = `name: markuli
-pitch: Scribble on your screen, then make it vanish.
-body: A hotkey turns your whole screen into a whiteboard with Excalidraw-identical ink. Press it again and it's gone.
-facts:
-  - text: "1.5 MB download"
-    source: "README claim; GitHub release asset Markuli-0.6.0-macos-universal.dmg is 1,618,813 bytes (about 1.5 MiB). Not yet re-verified."
-  - text: "11 MB idle RAM, 0% idle CPU"
-    source: "README claim. UNVERIFIED: must be measured in ticket #4."
-stack: Rust · native macOS · no webview
-repo: https://github.com/khatrihemang07/markuli
-download: https://github.com/khatrihemang07/markuli/releases/latest
-image: ../../assets/projects/markuli.svg
-alt: "Placeholder: markuli's red ink circling a bar in a chart drawn over an app window."
-order: 1
-`;
 
 const invalidCases = [
   [
@@ -40,6 +24,7 @@ image: ../../assets/projects/markuli.svg
 alt: "Gate alt text."
 order: 99
 `,
+    "facts",
   ],
   [
     "three Facts",
@@ -59,6 +44,7 @@ image: ../../assets/projects/markuli.svg
 alt: "Gate alt text."
 order: 99
 `,
+    "facts",
   ],
   [
     "empty alt",
@@ -76,6 +62,7 @@ image: ../../assets/projects/markuli.svg
 alt: ""
 order: 99
 `,
+    "alt",
   ],
   [
     "missing pitch",
@@ -92,6 +79,7 @@ image: ../../assets/projects/markuli.svg
 alt: "Gate alt text."
 order: 99
 `,
+    "pitch",
   ],
   [
     "a Fact with a missing source",
@@ -108,6 +96,7 @@ image: ../../assets/projects/markuli.svg
 alt: "Gate alt text."
 order: 99
 `,
+    "facts.0.source",
   ],
   [
     "an invalid repo URL",
@@ -125,8 +114,18 @@ image: ../../assets/projects/markuli.svg
 alt: "Gate alt text."
 order: 99
 `,
+    "repo",
   ],
 ];
+
+// Always remove the temporary invalid Project, even if the run is interrupted.
+for (const signal of ["SIGINT", "SIGTERM"]) {
+  process.on(signal, () => {
+    rmSync(invalidFile, { force: true });
+    process.exit(1);
+  });
+}
+process.on("exit", () => rmSync(invalidFile, { force: true }));
 
 function runBuild() {
   return spawnSync("pnpm", ["exec", "astro", "build"], {
@@ -136,23 +135,27 @@ function runBuild() {
   });
 }
 
-test("the real markuli entry is the only Project", () => {
-  assert.deepEqual(readdirSync(contentDir), ["markuli.yaml"]);
-  assert.equal(
-    readFileSync(join(contentDir, "markuli.yaml"), "utf8"),
-    markuliYaml,
-  );
+test("no temporary invalid Project is left behind", () => {
+  assert.throws(() => readFileSync(invalidFile), { code: "ENOENT" });
 });
 
-for (const [label, yaml] of invalidCases) {
+for (const [label, yaml, field] of invalidCases) {
   test(`build fails when a Project has ${label}`, () => {
     try {
       writeFileSync(invalidFile, yaml);
       const result = runBuild();
+      const output = `${result.stdout}\n${result.stderr}`;
       assert.notEqual(
         result.status,
         0,
-        `expected astro build to fail\n${result.stdout}\n${result.stderr}`,
+        `expected astro build to fail\n${output}`,
+      );
+      // The failure must come from the schema, name the invalid file and the field.
+      assert.match(output, /does not match collection schema/);
+      assert.match(output, /zz-gate-invalid/);
+      assert.ok(
+        output.includes(`${field}`),
+        `expected the error to name the field "${field}"\n${output}`,
       );
     } finally {
       rmSync(invalidFile, { force: true });

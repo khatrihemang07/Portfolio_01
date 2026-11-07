@@ -3,11 +3,11 @@ pitch: Your CLI, pretending to be an API.
 body: Point any OpenAI-compatible client at it. Each request runs one CLI process and returns a standard answer.
 facts:
   - text: "One process per request, no state"
-    source: "localAIWrapper README: 'One request = one fresh CLI process. The server keeps no state between requests.' Not yet re-verified."
+    source: "Verified 2026-11-07: the code comment says every Turn spawns a full CLI process, CONTEXT.md says Turns share no state, and one real request was run through the claude backend."
   - text: "OpenAI chat-completions format"
-    source: "localAIWrapper README: returns the answer in the standard OpenAI chat-completions format. Not yet re-verified."
+    source: "Verified 2026-11-07 by a real run: the JSON reply has object chat.completion, choices[0].message with role and content, finish_reason, and a usage block."
 stack: TypeScript · Bun
 repo: https://github.com/khatrihemang07/localAIWrapper
 image: ../../assets/projects/localaiwrapper.png
-alt: "Placeholder: a terminal showing a curl request and the OpenAI-style JSON reply."
+alt: "A terminal showing a curl request to localAIWrapper and its OpenAI-style JSON reply to the question of why a mutex beats busy-waiting."
 order: 3

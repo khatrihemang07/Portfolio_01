@@ -2,13 +2,13 @@ name: markuli
 pitch: Scribble on your screen, then make it vanish.
 body: A hotkey turns your whole screen into a whiteboard with Excalidraw-identical ink. Press it again and it's gone.
 facts:
-  - text: "1.5 MB download"
-    source: "README claim; GitHub release asset Markuli-0.6.0-macos-universal.dmg is 1,618,813 bytes (about 1.5 MiB). Not yet re-verified."
+  - text: "1.6 MB download"
+    source: "Verified 2026-11-07: GitHub release v0.6.0 asset Markuli-0.6.0-macos-universal.dmg is 1,618,813 bytes (1.6 MB as Finder shows it, 1.54 MiB), sha256 28277af2c3dbf182757d4ba94e88e6c1698aa7e4f715c642aac0159896fc9fc9. The README says 1.5 MB, which only holds in binary units."
   - text: "11 MB idle RAM, 0% idle CPU"
-    source: "README claim. UNVERIFIED: must be measured in ticket #4."
+    source: "Verified 2026-11-07 on the v0.6.0 release build (macOS, Apple silicon), idle with Draw Mode off: physical memory footprint 11 MB (macOS footprint tool, matching the Memory column in Activity Monitor) and 0.0% CPU in six top samples taken 3 s apart. Resident size reads about 42 MB because it counts shared system libraries."
 stack: Rust · native macOS · no webview
 repo: https://github.com/khatrihemang07/markuli
 download: https://github.com/khatrihemang07/markuli/releases/latest
 image: ../../assets/projects/markuli.png
-alt: "Placeholder: markuli's red ink circling a bar in a chart drawn over an app window."
+alt: "markuli's orange hand-drawn ink over a demo analytics dashboard: an ellipse around the tallest bar in a signups chart, with an arrow pointing at it."
 order: 1

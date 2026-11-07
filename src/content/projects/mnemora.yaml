@@ -3,9 +3,9 @@ pitch: A journal and to-do app that never leaves your device.
 body: Journal, Todo and AI modules share one shell and one SQLite file, on desktop and Android.
 facts:
   - text: "Desktop + Android"
-    source: "Mnemora README: 'offline-first life-management app for desktop and Android'. Not yet re-verified."
+    source: "Verified 2026-11-07: release v0.2.2 ships both a macOS dmg (Mnemora-0.2.2-macos-aarch64.dmg) and an Android apk (Mnemora-0.2.2-android.apk); the README describes it as offline-first for desktop and Android."
   - text: "All data in one SQLite file"
-    source: "Mnemora README: 'Your data stays on your device in a single SQLite file'. Not yet re-verified."
+    source: "Verified 2026-11-07 in the code: the app database path is a single mnemora.db file in the app data folder (core paths module), as the README states. Not observed by running the app."
 stack: Rust · Tauri 2 · TypeScript
 repo: https://github.com/khatrihemang07/Mnemora_v1
 download: https://github.com/khatrihemang07/Mnemora_v1/releases/latest

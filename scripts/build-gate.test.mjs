@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -141,6 +141,17 @@ function buildOnce() {
   sharedBuild ??= runBuild();
   return sharedBuild;
 }
+
+test("no Fact source is still marked unverified", () => {
+  for (const file of readdirSync(contentDir)) {
+    const text = readFileSync(join(contentDir, file), "utf8");
+    assert.doesNotMatch(
+      text,
+      /UNVERIFIED|Not yet re-verified/i,
+      `${file} still has an unverified Fact source`,
+    );
+  }
+});
 
 test("no temporary invalid Project is left behind", () => {
   assert.throws(() => readFileSync(invalidFile), { code: "ENOENT" });

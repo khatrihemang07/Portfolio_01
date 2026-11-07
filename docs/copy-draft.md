@@ -1,7 +1,7 @@
 # Site copy: draft for review
 
 Voice: plain, first-person, specific, with a touch of playfulness in the Card pitches. Terms follow `GLOSSARY.md`.
-Items marked **[verify]** must be checked before launch. Nothing here is final until the owner approves it.
+Copy approved by the owner on 2026-11-07. Remaining **[write after capture]** items are image alt text, which is now in the content files.
 
 ## Hero
 
@@ -17,8 +17,8 @@ Items marked **[verify]** must be checked before launch. Nothing here is final u
 
 - Pitch: Scribble on your screen, then make it vanish.
 - Body: A hotkey turns your whole screen into a whiteboard with Excalidraw-identical ink. Press it again and it's gone.
-- Fact 1: 1.5 MB download **[verify: README claim, measure the dmg]**
-- Fact 2: 11 MB idle RAM, 0% idle CPU **[verify: README claim, measure with Activity Monitor]**
+- Fact 1: 1.6 MB download (verified: release asset is 1,618,813 bytes)
+- Fact 2: 11 MB idle RAM, 0% idle CPU (verified: 11 MB footprint, 0.0% CPU)
 - Stack: Rust · native macOS · no webview
 - Links: Download (`/releases/latest`), Source
 - Image alt: markuli's red ink circling a bar in a chart on top of an app window. **[write after capture]**
@@ -50,7 +50,7 @@ I like software that starts instantly, keeps your data on your own device and do
 
 ### Path (Timeline)
 
-- Shiprocket · Backend engineer, 2025 - now **[verify: résumé title is "Graduate Engineer Trainee, Backend Engineering"]**
+- Shiprocket · Software Engineer, 2025 - now (owner-chosen wording)
 - IIT Kanpur · M.Tech, Computer Science
 - GEC Gandhinagar · B.E., Computer Engineering
 

@@ -161,6 +161,17 @@ test("no Fact source is still marked unverified", () => {
   }
 });
 
+test("no Showcase Image alt text is still a placeholder", () => {
+  for (const file of readdirSync(contentDir)) {
+    const text = readFileSync(join(contentDir, file), "utf8");
+    assert.doesNotMatch(
+      text,
+      /^alt:\s*"?placeholder/im,
+      `${file} still has a placeholder alt text`,
+    );
+  }
+});
+
 test("no temporary invalid Project is left behind", () => {
   assert.throws(() => readFileSync(invalidFile), { code: "ENOENT" });
 });

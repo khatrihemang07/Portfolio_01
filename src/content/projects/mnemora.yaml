@@ -5,10 +5,10 @@ facts:
   - text: "Desktop + Android"
     source: "Verified 2026-11-07: release v0.2.2 ships both a macOS dmg (Mnemora-0.2.2-macos-aarch64.dmg) and an Android apk (Mnemora-0.2.2-android.apk); the README describes it as offline-first for desktop and Android."
   - text: "All data in one SQLite file"
-    source: "Verified 2026-11-07 in the code: the app database path is a single mnemora.db file in the app data folder (core paths module), as the README states. Not observed by running the app."
+    source: "Verified 2026-11-07 in the code: the app database path is a single mnemora.db file in the app data folder (core paths module), as the README states. Also observed: launching the v0.2.2 release app on an empty home folder created a single mnemora.db (plus its -wal and -shm journal files) in its data folder."
 stack: Rust · Tauri 2 · TypeScript
 repo: https://github.com/khatrihemang07/Mnemora_v1
 download: https://github.com/khatrihemang07/Mnemora_v1/releases/latest
 image: ../../assets/projects/mnemora.png
-alt: "Placeholder: Mnemora's journal with entries listed under Today and Yesterday."
+alt: "Mnemora's Journal on a dark theme: dated days listed newest first, each with timestamped entries, and a Write box at the bottom."
 order: 2

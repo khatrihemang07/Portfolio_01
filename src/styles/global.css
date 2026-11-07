@@ -110,6 +110,7 @@
   --page-gutter: 16px;
   --content-max: 1120px;
   --touch-target: 44px;
+  --dock-clearance: 6rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -176,12 +177,17 @@ main {
   box-sizing: border-box;
   max-width: var(--content-max);
   margin: 0 auto;
-  padding: var(--space-10) var(--page-gutter) 140px;
+  padding: var(--space-10) var(--page-gutter) var(--dock-clearance);
+}
+
+section,
+.hero,
+.card {
+  scroll-margin-top: 24px;
 }
 
 section {
   margin-top: var(--space-10);
-  scroll-margin-top: 24px;
 }
 
 a {
@@ -555,6 +561,201 @@ h1 span {
   color: var(--muted);
 }
 
+/* Dock: the bottom pill. On phones it is the only navigation. */
+.dock {
+  position: fixed;
+  z-index: 20;
+  left: 50%;
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  translate: -50% 0;
+}
+
+.dock-list {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-pill);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--shadow);
+}
+
+.dock-highlight {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 0;
+  width: 0;
+  border-radius: var(--radius-pill);
+  background: var(--gradient-cta);
+}
+
+.dock-list a,
+.theme-toggle {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  min-width: var(--touch-target);
+  min-height: var(--touch-target);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.dock-list a[aria-current="true"] {
+  color: #ffffff;
+}
+
+.dock-label {
+  max-width: 0;
+  margin-left: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* The label stays in the accessible name when collapsed; only the active one shows. */
+.dock-list a[aria-current="true"] .dock-label {
+  max-width: 6em;
+  margin-left: var(--space-2);
+}
+
+.icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.theme-toggle[aria-pressed="true"] .icon-moon,
+.theme-toggle[aria-pressed="false"] .icon-sun {
+  display: none;
+}
+
+@media (hover: hover) {
+  .dock-list a:not([aria-current="true"]):hover,
+  .theme-toggle:hover {
+    color: var(--fg);
+    background: var(--tint-violet);
+  }
+}
+
+/* Ruler: slim ticks on the right edge, one per section and per Featured Project. */
+.ruler {
+  position: fixed;
+  z-index: 20;
+  top: 50%;
+  right: var(--space-3);
+  translate: 0 -50%;
+}
+
+.ruler-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.tick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 24px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.tick-bar {
+  display: block;
+  flex: none;
+  width: 14px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--muted);
+}
+
+.tick-sub .tick-bar {
+  width: 8px;
+}
+
+.tick[aria-current="true"] .tick-bar {
+  width: 30px;
+  background: var(--gradient-cta);
+}
+
+.tick-label {
+  padding: 2px 8px;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(6px);
+}
+
+.tick:hover .tick-label,
+.tick:focus-visible .tick-label,
+.tick[aria-current="true"] .tick-label {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .dock[data-ready] .dock-highlight {
+    transition:
+      transform 0.45s cubic-bezier(0.3, 1.2, 0.4, 1),
+      width 0.45s cubic-bezier(0.3, 1.2, 0.4, 1);
+  }
+
+  .dock-label {
+    transition:
+      max-width 0.35s ease,
+      margin-left 0.35s ease;
+  }
+
+  .tick-bar {
+    transition: width 0.25s ease;
+  }
+
+  .tick-label {
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+}
+
+/* Narrower than the room a label needs: show tick labels on hover and focus only. */
+@media (max-width: 1299.98px) {
+  .tick[aria-current="true"]:not(:hover):not(:focus-visible) .tick-label {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+}
+
 /* Phones: lighter glass and a background that scrolls with the page */
 @media (max-width: 859.98px) {
   :root {
@@ -564,12 +765,16 @@ h1 span {
   body {
     background-attachment: scroll;
   }
+
+  .ruler {
+    display: none;
+  }
 }
 
-/* Wide: the bento layout */
+/* Wide: the bento layout. The right gutter keeps the Ruler clear of the tiles. */
 @media (min-width: 860px) {
   main {
-    padding-inline: 24px;
+    padding-inline: 24px 4rem;
   }
 
   .hero,
@@ -622,6 +827,18 @@ h1 span {
   .tile:hover,
   .cta:hover {
     transform: none;
+  }
+
+  /* Dock and Ruler: no sliding highlight, label or tick animation; jumps are instant. */
+  html {
+    scroll-behavior: auto;
+  }
+
+  .dock-highlight,
+  .dock-label,
+  .tick-bar,
+  .tick-label {
+    transition: none;
   }
 }
 

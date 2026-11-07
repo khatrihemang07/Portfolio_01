@@ -1,0 +1,28 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  projects: CollectionEntry<"projects">[];
+}
+
+const { projects } = Astro.props;
+---
+
+<nav class="ruler" aria-label="Ruler">
+  <ul class="ruler-list">
+    <li><a class="tick" href="#top" aria-current="true"><span class="tick-label">Top</span><span class="tick-bar" aria-hidden="true"></span></a></li>
+    <li><a class="tick" href="#work" data-group="work"><span class="tick-label">Work</span><span class="tick-bar" aria-hidden="true"></span></a></li>
+    {
+      projects.map((project) => (
+        <li>
+          <a class="tick tick-sub" href={`#project-${project.id}`} data-group="work">
+            <span class="tick-label">{project.data.name}</span>
+            <span class="tick-bar" aria-hidden="true"></span>
+          </a>
+        </li>
+      ))
+    }
+    <li><a class="tick" href="#about"><span class="tick-label">About</span><span class="tick-bar" aria-hidden="true"></span></a></li>
+    <li><a class="tick" href="#contact"><span class="tick-label">Contact</span><span class="tick-bar" aria-hidden="true"></span></a></li>
+  </ul>
+</nav>

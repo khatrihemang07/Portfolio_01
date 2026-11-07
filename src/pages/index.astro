@@ -3,7 +3,9 @@ import { getCollection } from "astro:content";
 import About from "../components/About.astro";
 import Card from "../components/Card.astro";
 import Contact from "../components/Contact.astro";
+import Dock from "../components/Dock.astro";
 import Hero from "../components/Hero.astro";
+import Ruler from "../components/Ruler.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
 const projects = (await getCollection("projects")).sort(
@@ -42,4 +44,6 @@ const tints: Record<string, "pink" | "violet" | "teal"> = {
     <About />
     <Contact />
   </main>
+  <Dock />
+  <Ruler projects={projects} />
 </BaseLayout>

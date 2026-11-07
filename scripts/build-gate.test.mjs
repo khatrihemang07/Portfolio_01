@@ -300,6 +300,56 @@ describe("built Site with three Cards", () => {
   });
 });
 
+const page = () => readFileSync(join(root, "dist", "index.html"), "utf8");
+const textOf = (fragment) =>
+  fragment
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+const linkTags = () => page().match(/<link\b[^>]*>/g) ?? [];
+const builtCss = () =>
+  [
+    ...linkTags()
+      .filter((tag) => /rel="stylesheet"/.test(tag))
+      .map((tag) =>
+        readFileSync(
+          join(root, "dist", tag.match(/href="([^"]+)"/)[1]),
+          "utf8",
+        ),
+      ),
+    ...[...page().matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(
+      (match) => match[1],
+    ),
+  ].join("\n");
+// Built CSS is minified, so media rules are read by brace matching.
+const mediaBlocks = (css, condition) => {
+  const blocks = [];
+  const flat = css.replace(/\s+/g, "");
+  const needle = `@media${condition.replace(/\s+/g, "")}{`;
+  let at = flat.indexOf(needle);
+  while (at > -1) {
+    let depth = 0;
+    let end = at + needle.length - 1;
+    for (; end < flat.length; end++) {
+      if (flat[end] === "{") depth++;
+      if (flat[end] === "}" && --depth === 0) break;
+    }
+    blocks.push(flat.slice(at + needle.length, end));
+    at = flat.indexOf(needle, end);
+  }
+  return blocks;
+};
+// Hoisted Astro scripts are usually inlined, but external module files are read too.
+const builtJs = () =>
+  [
+    ...[...page().matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(
+      (match) => match[1],
+    ),
+    ...[...page().matchAll(/<script[^>]*\ssrc="([^"]+)"[^>]*>/g)].map((match) =>
+      readFileSync(join(root, "dist", match[1]), "utf8"),
+    ),
+  ].join("\n");
+
 describe("built full page: look, feel and content", () => {
   before(() => {
     const result = buildOnce();
@@ -310,31 +360,10 @@ describe("built full page: look, feel and content", () => {
     );
   });
 
-  const page = () => readFileSync(join(root, "dist", "index.html"), "utf8");
-  const textOf = (fragment) =>
-    fragment
-      .replace(/<[^>]*>/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
   const sectionOf = (id) =>
     page().match(
       new RegExp(`<section[^>]*\\sid="${id}"[\\s\\S]*?</section>`),
     )?.[0] ?? "";
-  const linkTags = () => page().match(/<link\b[^>]*>/g) ?? [];
-  const builtCss = () =>
-    [
-      ...linkTags()
-        .filter((tag) => /rel="stylesheet"/.test(tag))
-        .map((tag) =>
-          readFileSync(
-            join(root, "dist", tag.match(/href="([^"]+)"/)[1]),
-            "utf8",
-          ),
-        ),
-      ...[...page().matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(
-        (match) => match[1],
-      ),
-    ].join("\n");
   const visibleText = () =>
     textOf(
       page()
@@ -528,5 +557,131 @@ describe("built full page: look, feel and content", () => {
       assert.match(block, /font-display:\s*swap/);
       assert.doesNotMatch(block, /U\+0100/, "found a latin-ext unicode-range");
     }
+  });
+});
+
+describe("built navigation: Dock and Ruler", () => {
+  before(() => {
+    const result = buildOnce();
+    assert.equal(
+      result.status,
+      0,
+      `astro build failed\n${result.stdout}\n${result.stderr}`,
+    );
+  });
+
+  const navOf = (label) =>
+    page().match(
+      new RegExp(`<nav[^>]*aria-label="${label}"[\\s\\S]*?</nav>`),
+    )?.[0] ?? "";
+  const hrefsOf = (nav) =>
+    [...nav.matchAll(/<a\b[^>]*\shref="([^"]+)"/g)].map((match) => match[1]);
+  const articleIds = () =>
+    [...page().matchAll(/<article\b[^>]*\sid="([^"]+)"/g)].map(
+      (match) => match[1],
+    );
+  const idCount = (id) =>
+    [...page().matchAll(/\sid="([^"]+)"/g)].filter((match) => match[1] === id)
+      .length;
+
+  test("the Dock is a nav with exactly four links to top, work, about, contact in order", () => {
+    assert.deepEqual(hrefsOf(navOf("Dock")), [
+      "#top",
+      "#work",
+      "#about",
+      "#contact",
+    ]);
+  });
+
+  test("the Dock has one theme button with an accessible name containing theme", () => {
+    const buttons = navOf("Dock").match(/<button\b[^>]*>/g) ?? [];
+    assert.equal(buttons.length, 1, "expected exactly one button in the Dock");
+    assert.match(buttons[0], /type="button"/);
+    assert.match(buttons[0], /aria-label="[^"]*theme[^"]*"/i);
+  });
+
+  test("the Ruler is a nav with seven ticks: top, work, three projects, about, contact", () => {
+    assert.deepEqual(hrefsOf(navOf("Ruler")), [
+      "#top",
+      "#work",
+      "#project-markuli",
+      "#project-mnemora",
+      "#project-localaiwrapper",
+      "#about",
+      "#contact",
+    ]);
+  });
+
+  test("every Dock and Ruler target id exists exactly once in the HTML", () => {
+    const targets = [...hrefsOf(navOf("Dock")), ...hrefsOf(navOf("Ruler"))];
+    // Guard against passing vacuously while the navs are missing.
+    assert.equal(targets.length, 11, "expected 4 Dock and 7 Ruler targets");
+    for (const href of targets) {
+      const id = href.slice(1);
+      assert.equal(
+        idCount(id),
+        1,
+        `expected exactly one element with id ${id}`,
+      );
+    }
+  });
+
+  test("the top of the page is id top, and each Card article carries its project id", () => {
+    assert.equal(idCount("top"), 1);
+    assert.deepEqual(articleIds(), [
+      "project-markuli",
+      "project-mnemora",
+      "project-localaiwrapper",
+    ]);
+  });
+
+  test("the built CSS hides the Ruler in a max-width media query under 860px", () => {
+    // The minifier may write the range as (width<=859.98px); both spellings are the same query.
+    const blocks = [
+      ...mediaBlocks(builtCss(), "(max-width: 859.98px)"),
+      ...mediaBlocks(builtCss(), "(width<=859.98px)"),
+    ];
+    assert.ok(
+      blocks.some((block) => block.includes(".ruler{display:none}")),
+      "expected .ruler{display:none} inside @media (max-width: 859.98px)",
+    );
+  });
+
+  test("reduced motion turns off the Dock highlight, Ruler ticks and smooth scrolling", () => {
+    const blocks = mediaBlocks(
+      builtCss(),
+      "(prefers-reduced-motion: reduce)",
+    ).join("");
+    assert.ok(
+      blocks.includes(".dock-highlight"),
+      "expected the Dock highlight",
+    );
+    assert.ok(blocks.includes(".tick-bar"), "expected the Ruler tick bars");
+    assert.ok(
+      blocks.includes("scroll-behavior:auto"),
+      "expected scroll-behavior: auto",
+    );
+  });
+
+  test("the page reserves bottom padding of at least 5rem for the Dock", () => {
+    const css = builtCss().replace(/\s+/g, "");
+    const clearance = css.match(/--dock-clearance:([\d.]+)rem/);
+    assert.ok(clearance, "expected a --dock-clearance token in rem");
+    assert.ok(
+      Number(clearance[1]) >= 5,
+      `clearance ${clearance[1]}rem is under 5rem`,
+    );
+    const mainRules = [...css.matchAll(/[{}]main\{([^}]*)\}/g)].map(
+      (match) => match[1],
+    );
+    assert.ok(
+      mainRules.some((rule) => rule.includes("var(--dock-clearance)")),
+      "expected main padding to use --dock-clearance",
+    );
+  });
+
+  test("the bundled navigation script writes localStorage key theme", () => {
+    // The minifier may use quotes or template literals for the key.
+    assert.match(builtJs(), /localStorage\.setItem\(\s*["'`]theme["'`]/);
   });
 });

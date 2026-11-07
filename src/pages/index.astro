@@ -21,7 +21,7 @@ const tints: Record<string, "pink" | "violet" | "teal"> = {
 
 <BaseLayout>
   <main id="main">
-    <Hero />
+    <Hero projectCount={projects.length} />
     <section id="work" aria-labelledby="work-heading">
       <h2 id="work-heading" class="section-label">Selected work</h2>
       <div class="bento work-grid">

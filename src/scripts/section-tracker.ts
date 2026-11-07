@@ -143,7 +143,10 @@ if (dock && ruler) {
   });
   window.addEventListener("load", schedule);
   window.addEventListener("hashchange", () => {
-    lockTo(location.hash);
+    // Back to a URL with no (or an unknown) hash must hand control back to the
+    // scroll position, or the old lock would keep a stale section current.
+    if (indexForHash(location.hash) < 0) unlock();
+    else lockTo(location.hash);
     schedule();
   });
   window.addEventListener("pageshow", schedule);

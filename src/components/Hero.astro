@@ -1,3 +1,12 @@
+---
+interface Props {
+  // How many Featured Projects are shown, so the Stat Tile always matches the Work section.
+  projectCount: number;
+}
+
+const { projectCount } = Astro.props;
+---
+
 <header id="top" class="hero bento">
   <div class="tile name-tile" style="--i: 0">
     <h1>Hemang <span>Khatri</span></h1>
@@ -7,7 +16,7 @@
     </div>
   </div>
   <div class="tile stat-tile tint-amber" style="--i: 1">
-    <p class="stat-value">3</p>
+    <p class="stat-value">{projectCount}</p>
     <p class="stat-label">public projects</p>
   </div>
   <div class="tile stat-tile tint-teal" style="--i: 2">

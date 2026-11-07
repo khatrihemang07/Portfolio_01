@@ -41,8 +41,8 @@ const person = {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script is:inline>
-      // Applies a stored theme before first paint. A future toggle only needs to
-      // set localStorage.theme and document.documentElement.dataset.theme.
+      // Applies a stored theme before first paint. The toggle in the Dock
+      // (src/scripts/theme-toggle.ts) writes the same localStorage.theme key.
       try {
         var saved = localStorage.getItem("theme");
         if (saved === "light" || saved === "dark") {
@@ -60,7 +60,7 @@ const person = {
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {!noindex && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />

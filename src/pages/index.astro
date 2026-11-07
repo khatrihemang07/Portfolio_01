@@ -20,11 +20,13 @@ const projects = (await getCollection("projects")).sort(
     </header>
     <section id="work" aria-labelledby="work-heading">
       <h2 id="work-heading">Selected work</h2>
-      {
-        projects.map((project, index) => (
-          <Card project={project} eager={index === 0} />
-        ))
-      }
+      <div class="work-grid">
+        {
+          projects.map((project, index) => (
+            <Card project={project} eager={index === 0} wide={index === 0} />
+          ))
+        }
+      </div>
     </section>
   </main>
 </BaseLayout>

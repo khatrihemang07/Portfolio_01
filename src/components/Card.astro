@@ -1,40 +1,45 @@
 ---
-import { Image } from "astro:assets";
+import { Picture } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
 
 interface Props {
   project: CollectionEntry<"projects">;
   eager?: boolean;
+  wide?: boolean;
 }
 
-const { project, eager = false } = Astro.props;
+const { project, eager = false, wide = false } = Astro.props;
 const { data } = project;
 ---
 
-<article class="card">
-  <Image
+<article class:list={["card", wide && "card-wide"]}>
+  <Picture
     src={data.image}
     alt={data.alt}
-    class="card-image"
+    formats={["avif", "webp"]}
+    widths={[480, 960, 1440]}
+    sizes={wide ? "(min-width: 860px) 60vw, 100vw" : "(min-width: 860px) 30vw, 100vw"}
     loading={eager ? "eager" : "lazy"}
-    width={data.image.width}
-    height={data.image.height}
+    fetchpriority={eager ? "high" : "auto"}
+    class="card-image"
   />
-  <h3>{data.name}</h3>
-  <p class="pitch">{data.pitch}</p>
-  <p>{data.body}</p>
-  <ul class="facts">
-    {data.facts.map((fact) => <li>{fact.text}</li>)}
-  </ul>
-  <p class="stack">{data.stack}</p>
-  <p class="links">
-    {
-      data.download && (
-        <a href={data.download} target="_blank" rel="noopener">
-          Download
-        </a>
-      )
-    }
-    <a href={data.repo} target="_blank" rel="noopener">Source</a>
-  </p>
+  <div class="card-body">
+    <h3>{data.name}</h3>
+    <p class="pitch">{data.pitch}</p>
+    <p>{data.body}</p>
+    <ul class="facts">
+      {data.facts.map((fact) => <li>{fact.text}</li>)}
+    </ul>
+    <p class="stack">{data.stack}</p>
+    <p class="links">
+      {
+        data.download && (
+          <a href={data.download} target="_blank" rel="noopener">
+            Download
+          </a>
+        )
+      }
+      <a href={data.repo} target="_blank" rel="noopener">Source</a>
+    </p>
+  </div>
 </article>

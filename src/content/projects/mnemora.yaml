@@ -1,0 +1,14 @@
+name: Mnemora
+pitch: A journal and to-do app that never leaves your device.
+body: Journal, Todo and AI modules share one shell and one SQLite file, on desktop and Android.
+facts:
+  - text: "Desktop + Android"
+    source: "Mnemora README: 'offline-first life-management app for desktop and Android'. Not yet re-verified."
+  - text: "All data in one SQLite file"
+    source: "Mnemora README: 'Your data stays on your device in a single SQLite file'. Not yet re-verified."
+stack: Rust · Tauri 2 · TypeScript
+repo: https://github.com/khatrihemang07/Mnemora_v1
+download: https://github.com/khatrihemang07/Mnemora_v1/releases/latest
+image: ../../assets/projects/mnemora.png
+alt: "Placeholder: Mnemora's journal with entries listed under Today and Yesterday."
+order: 2

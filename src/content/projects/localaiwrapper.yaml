@@ -1,0 +1,13 @@
+name: localAIWrapper
+pitch: Your CLI, pretending to be an API.
+body: Point any OpenAI-compatible client at it. Each request runs one CLI process and returns a standard answer.
+facts:
+  - text: "One process per request, no state"
+    source: "localAIWrapper README: 'One request = one fresh CLI process. The server keeps no state between requests.' Not yet re-verified."
+  - text: "OpenAI chat-completions format"
+    source: "localAIWrapper README: returns the answer in the standard OpenAI chat-completions format. Not yet re-verified."
+stack: TypeScript · Bun
+repo: https://github.com/khatrihemang07/localAIWrapper
+image: ../../assets/projects/localaiwrapper.png
+alt: "Placeholder: a terminal showing a curl request and the OpenAI-style JSON reply."
+order: 3

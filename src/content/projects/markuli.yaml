@@ -9,6 +9,6 @@ facts:
 stack: Rust · native macOS · no webview
 repo: https://github.com/khatrihemang07/markuli
 download: https://github.com/khatrihemang07/markuli/releases/latest
-image: ../../assets/projects/markuli.svg
+image: ../../assets/projects/markuli.png
 alt: "Placeholder: markuli's red ink circling a bar in a chart drawn over an app window."
 order: 1

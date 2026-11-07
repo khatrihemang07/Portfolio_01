@@ -74,11 +74,21 @@ a {
   margin-top: 2.5rem;
 }
 
+.work-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+}
+
 .card {
   border: 1px solid var(--border);
   border-radius: 1rem;
   padding: 1.25rem;
-  margin-bottom: 1.5rem;
+  min-width: 0;
+}
+
+.card picture {
+  display: block;
 }
 
 .card-image {
@@ -88,6 +98,24 @@ a {
   aspect-ratio: 16 / 10;
   object-fit: cover;
   border-radius: 0.5rem;
+}
+
+@media (min-width: 860px) {
+  main {
+    max-width: 64rem;
+  }
+
+  .work-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card-wide {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 1.5rem;
+    align-items: center;
+  }
 }
 
 .pitch {

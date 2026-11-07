@@ -1,0 +1,14 @@
+name: markuli
+pitch: Scribble on your screen, then make it vanish.
+body: A hotkey turns your whole screen into a whiteboard with Excalidraw-identical ink. Press it again and it's gone.
+facts:
+  - text: "1.5 MB download"
+    source: "README claim; GitHub release asset Markuli-0.6.0-macos-universal.dmg is 1,618,813 bytes (about 1.5 MiB). Not yet re-verified."
+  - text: "11 MB idle RAM, 0% idle CPU"
+    source: "README claim. UNVERIFIED: must be measured in ticket #4."
+stack: Rust · native macOS · no webview
+repo: https://github.com/khatrihemang07/markuli
+download: https://github.com/khatrihemang07/markuli/releases/latest
+image: ../../assets/projects/markuli.svg
+alt: "Placeholder: markuli's red ink circling a bar in a chart drawn over an app window."
+order: 1

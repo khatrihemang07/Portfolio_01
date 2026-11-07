@@ -1,0 +1,40 @@
+---
+import { Image } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  project: CollectionEntry<"projects">;
+  eager?: boolean;
+}
+
+const { project, eager = false } = Astro.props;
+const { data } = project;
+---
+
+<article class="card">
+  <Image
+    src={data.image}
+    alt={data.alt}
+    class="card-image"
+    loading={eager ? "eager" : "lazy"}
+    width={data.image.width}
+    height={data.image.height}
+  />
+  <h3>{data.name}</h3>
+  <p class="pitch">{data.pitch}</p>
+  <p>{data.body}</p>
+  <ul class="facts">
+    {data.facts.map((fact) => <li>{fact.text}</li>)}
+  </ul>
+  <p class="stack">{data.stack}</p>
+  <p class="links">
+    {
+      data.download && (
+        <a href={data.download} target="_blank" rel="noopener">
+          Download
+        </a>
+      )
+    }
+    <a href={data.repo} target="_blank" rel="noopener">Source</a>
+  </p>
+</article>

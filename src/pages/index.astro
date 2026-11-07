@@ -1,0 +1,30 @@
+---
+import { getCollection } from "astro:content";
+import Card from "../components/Card.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const projects = (await getCollection("projects")).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+---
+
+<BaseLayout
+  title="Hemang Khatri"
+  description="Portfolio of Hemang Khatri: fast native apps and backend tools, including markuli, Mnemora and localAIWrapper."
+>
+  <main>
+    <header class="hero">
+      <div class="name-tile">
+        <h1>Hemang Khatri</h1>
+      </div>
+    </header>
+    <section id="work" aria-labelledby="work-heading">
+      <h2 id="work-heading">Selected work</h2>
+      {
+        projects.map((project, index) => (
+          <Card project={project} eager={index === 0} />
+        ))
+      }
+    </section>
+  </main>
+</BaseLayout>

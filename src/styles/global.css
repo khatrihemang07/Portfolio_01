@@ -649,6 +649,28 @@ h1 span {
   min-width: 0;
 }
 
+/* Phones: the name, then the pitch, then the buttons above the Facts. */
+.project-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.project-title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.project-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
 .project-block > .gallery {
   order: -1;
   min-width: 0;
@@ -901,6 +923,7 @@ h1 span {
 }
 
 .gallery-count {
+  white-space: nowrap;
   color: var(--muted);
   font-size: 0.8rem;
   font-weight: 700;
@@ -1403,30 +1426,76 @@ h1 span {
     min-width: 0;
   }
 
+  /* Rows: 1 header band (name left, pitch right), 2 meta row (buttons and Facts), 3 text and Gallery side by side. */
   .project-block {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    align-items: center;
+    align-items: start;
     gap: var(--space-8);
     padding: var(--space-8);
   }
 
-  .project-block > .gallery {
-    order: 0;
+  .project-head {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: var(--space-8);
   }
 
-  /* The Facts run across the whole block on the second row, four across. */
-  .facts {
+  .project-head .pitch {
+    max-width: 36ch;
+    margin: 0;
+    text-align: left;
+  }
+
+  .project-meta {
     grid-column: 1 / -1;
     grid-row: 2;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-6);
+  }
+
+  .project-meta .links {
+    flex-shrink: 0;
+  }
+
+  /* Four Facts across the rest of the meta row. Cards hug their text rather than stretching. */
+  .facts {
+    flex: 1;
+    min-width: 0;
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .facts li {
+    display: flex;
+    align-items: center;
+  }
+
+  .project-text {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .project-block > .gallery {
+    order: 0;
+    grid-column: 2;
+    grid-row: 3;
   }
 
   .project-block:nth-of-type(even) {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
   }
 
+  .project-block:nth-of-type(even) > .project-text {
+    grid-column: 2;
+  }
+
   .project-block:nth-of-type(even) > .gallery {
     order: -1;
+    grid-column: 1;
   }
 
   .about-panel {

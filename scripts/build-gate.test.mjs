@@ -325,8 +325,8 @@ describe("built Site with three Project Blocks", () => {
     const blankLinks = html().match(/<a [^>]*target="_blank"[^>]*>/g) ?? [];
     assert.equal(
       blankLinks.length,
-      7,
-      "expected 3 Source, 2 Download, the Contact GitHub link and the See more link",
+      8,
+      "expected 3 Source, 2 Download, the Contact GitHub link, the Contact LinkedIn link and the See more link",
     );
     for (const link of blankLinks) {
       assert.match(link, /rel="noopener"/, `missing rel="noopener": ${link}`);
@@ -781,6 +781,60 @@ describe("built full page: look, feel and content", () => {
       "expected the svg before the text",
     );
     assert.equal(textOf(link), "See more of my work on GitHub →");
+  });
+
+  const linkedinLink = () =>
+    (sectionOf("contact").match(/<a\b[^>]*linkedin-link[\s\S]*?<\/a>/) ??
+      [])[0] ?? "";
+  const LINKEDIN_HREF = "https://www.linkedin.com/in/hemang-khatri-022056290/";
+  const LINKEDIN_PATH =
+    "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z";
+
+  test("the Contact LinkedIn link is a glass pill to the exact profile, in a new tab with noopener", () => {
+    const link = linkedinLink();
+    assert.ok(link, "expected the Contact LinkedIn link");
+    const open = link.match(/<a\b[^>]*>/)?.[0] ?? "";
+    assert.equal(svgAttr(open, "href"), LINKEDIN_HREF);
+    assert.equal(svgAttr(open, "target"), "_blank");
+    assert.equal(svgAttr(open, "rel"), "noopener");
+    assert.match(
+      svgAttr(open, "class") ?? "",
+      /\bbutton-glass\b/,
+      "expected a glass pill",
+    );
+  });
+
+  test("the LinkedIn mark is an aria-hidden svg before the visible text LinkedIn, and the accessible text is just LinkedIn", () => {
+    const link = linkedinLink();
+    const svg = link.match(/<svg\b[^>]*>/)?.[0] ?? "";
+    assert.ok(svg, "expected an svg in the LinkedIn link");
+    assert.equal(svgAttr(svg, "aria-hidden"), "true");
+    assert.equal(svgAttr(svg, "focusable"), "false");
+    assert.equal(svgAttr(svg, "viewBox"), "0 0 24 24");
+    assert.equal(svgAttr(svg, "class"), "button-icon");
+    assert.equal(githubMarkD(link), LINKEDIN_PATH, "the LinkedIn path");
+    assert.ok(
+      link.indexOf("<svg") < link.indexOf("LinkedIn</"),
+      "expected the svg before the text",
+    );
+    assert.equal(textOf(link), "LinkedIn");
+  });
+
+  test("LinkedIn is linked once on the page, in the Contact actions after the GitHub link", () => {
+    const hrefs =
+      page().match(/<a\b[^>]*href="https:\/\/(www\.)?linkedin\.com[^"]*"/g) ??
+      [];
+    assert.equal(hrefs.length, 1, "expected exactly one LinkedIn link");
+    const contact = sectionOf("contact");
+    assert.ok(
+      contact.indexOf("github-link") < contact.indexOf("linkedin-link"),
+      "LinkedIn follows GitHub",
+    );
+    assert.equal(
+      page().split(`d="${LINKEDIN_PATH}"`).length - 1,
+      1,
+      "the LinkedIn path appears only in the Contact link",
+    );
   });
 
   test("the GitHub mark path is one shared octicon: the same d in every Source link, the Contact link and the See more link", () => {
@@ -2110,12 +2164,68 @@ describe("built Project Block structure, tabs, buttons, Facts strip and Gallery"
     }
   });
 
-  test("the Facts are a direct child of the Project Block, outside the text column", () => {
+  // The Project Block as three parts after its header: meta row, text column, then the Gallery.
+  const segmentOf = (article, from, to) => {
+    const start = article.indexOf(from);
+    const end = to ? article.indexOf(to, start) : article.length;
+    return start > -1 && end > -1 ? article.slice(start, end) : "";
+  };
+
+  test("the Project Block is header, meta row, text column, then Gallery, in that DOM order", () => {
     for (const article of articlesHtml()) {
-      assert.equal(divDepthAt(article, 'class="facts"'), 0, "Facts depth");
+      const head = article.indexOf('<header class="project-head"');
+      const meta = article.indexOf('<div class="project-meta"');
+      const text = article.indexOf('<div class="project-text"');
+      const gallery = article.indexOf('<div class="gallery">');
+      assert.ok(head > -1, 'expected <header class="project-head">');
+      assert.ok(meta > head && text > meta && gallery > text, "DOM order");
+    }
+  });
+
+  test("the header holds the name and stack in a title group, with the pitch after it", () => {
+    for (const article of articlesHtml()) {
+      const head = segmentOf(
+        article,
+        '<header class="project-head"',
+        "</header>",
+      );
+      const title = segmentOf(head, '<div class="project-title"', "</div>");
+      assert.match(title, /<h3[\s>]/, "name is in the title group");
+      assert.match(title, /class="stack"/, "stack is in the title group");
+      assert.ok(
+        head.indexOf('class="pitch"') > head.indexOf('class="stack"'),
+        "pitch comes after the stack",
+      );
+      assert.doesNotMatch(head, /class="(links|tabs|facts)"|<ul|<button/);
+    }
+  });
+
+  test("the meta row holds the buttons and the Facts; the text column holds only tabs and panels", () => {
+    for (const article of articlesHtml()) {
+      const meta = segmentOf(
+        article,
+        '<div class="project-meta"',
+        '<div class="project-text"',
+      );
+      const text = segmentOf(
+        article,
+        '<div class="project-text"',
+        'class="gallery"',
+      );
+      assert.match(meta, /class="links"/, "buttons are in the meta row");
+      assert.match(meta, /<ul[^>]*class="facts"/, "Facts are in the meta row");
+      assert.doesNotMatch(text, /class="(facts|links)"/);
+      assert.match(text, /class="tabs"/, "tabs are in the text column");
+      assert.match(text, /class="tab-panels"/, "panels are in the text column");
+    }
+  });
+
+  test("the name and stack are in the title group, and the buttons and Facts are direct children of the meta row", () => {
+    for (const article of articlesHtml()) {
       assert.equal(divDepthAt(article, "<h3"), 1, "name depth");
-      assert.equal(divDepthAt(article, '<div class="tabs"'), 1, "tabs depth");
-      assert.equal(divDepthAt(article, 'class="links"'), 1, "links depth");
+      assert.equal(divDepthAt(article, 'class="stack"'), 1, "stack depth");
+      assert.equal(divDepthAt(article, '<div class="links"'), 1, "links depth");
+      assert.equal(divDepthAt(article, 'class="facts"'), 1, "Facts depth");
     }
   });
 
@@ -2187,14 +2297,107 @@ describe("built Project Block structure, tabs, buttons, Facts strip and Gallery"
     assert.match(js, /is-active/, "the active panel gets is-active");
   });
 
-  test("on wide screens the Facts are a full-width strip on grid row 2, four across", () => {
-    const wide = mediaBlocks(builtCss(), "(width>=860px)").join("");
+  // Wide CSS as one string, and the body of each wide rule with exactly this selector (or matching a pattern).
+  const wideCss = () =>
+    [
+      ...mediaBlocks(builtCss(), "(min-width: 860px)"),
+      ...mediaBlocks(builtCss(), "(width>=860px)"),
+    ].join("");
+  const wideBody = (selector) =>
+    rulesOf(wideCss())
+      .filter(([sel]) => sel === selector.replace(/\s+/g, ""))
+      .map(([, body]) => body)
+      .join(";");
+  const wideBodyMatching = (pattern) =>
+    rulesOf(wideCss())
+      .filter(([sel]) => pattern.test(sel))
+      .map(([, body]) => body)
+      .join(";");
+  // Grid placement as the minifier may write it: grid-row/grid-column, or the merged grid-area row/col/rowEnd/colEnd.
+  const placeOf = (body) => {
+    const area = body.match(/grid-area:([^;]*)/)?.[1].split("/") ?? [];
+    const col = body.match(/grid-column:([^;]*)/)?.[1].split("/") ?? [];
+    const row = body.match(/grid-row:([^;]*)/)?.[1].split("/") ?? [];
+    return {
+      row: row[0] ?? area[0],
+      col: col[0] ?? area[1],
+      colEnd: col[1] ?? area[3],
+    };
+  };
+
+  test("on wide screens the header band spans both columns on row 1, name left and pitch right on one row", () => {
+    const head = wideBody(".project-head");
+    assert.ok(head, "expected a wide .project-head rule");
+    const place = placeOf(head);
+    assert.equal(place.row, "1", "header on row 1");
+    assert.equal(place.col, "1", "header starts in column 1");
+    assert.equal(place.colEnd, "-1", "header spans to the last column");
+    assert.match(head, /flex-direction:row/, "name and pitch side by side");
+    assert.match(head, /justify-content:space-between/);
+    assert.match(head, /align-items:flex-end/);
     assert.match(
-      wide,
-      /\.facts\{[^}]*(grid-area:2\/1\/auto\/-1|grid-column:1\/-1)/,
+      wideBody(".project-head .pitch"),
+      /max-width:36ch/,
+      "pitch is capped at about 36ch",
     );
-    assert.match(wide, /\.facts\{[^}]*(grid-area:2\/|grid-row:2)/);
-    assert.match(wide, /\.facts\{[^}]*repeat\(4/);
+  });
+
+  test("on wide screens the meta row spans both columns on row 2, with the buttons and the Facts side by side", () => {
+    const meta = wideBody(".project-meta");
+    assert.ok(meta, "expected a wide .project-meta rule");
+    const place = placeOf(meta);
+    assert.equal(place.row, "2", "meta row is row 2");
+    assert.equal(place.colEnd, "-1", "meta row spans both columns");
+    assert.match(meta, /flex-direction:row/);
+    assert.match(
+      meta,
+      /align-items:center/,
+      "buttons and Facts centred on one row",
+    );
+    const facts = wideBody(".facts");
+    assert.match(facts, /repeat\(4/, "Facts four across");
+    assert.match(facts, /flex:1/, "Facts take the width left by the buttons");
+    assert.match(
+      facts,
+      /align-items:stretch/,
+      "Fact cards share one height in the row",
+    );
+  });
+
+  test("on wide screens the tabs and text and the Gallery share row 3, aligned to the start, with the sides swapped per block", () => {
+    const text = wideBody(".project-text");
+    assert.equal(placeOf(text).row, "3", "text column is row 3");
+    assert.equal(placeOf(text).col, "1", "odd block: text in column 1");
+    const gallery = wideBodyMatching(/^\.project-block>\.gallery$/);
+    assert.equal(placeOf(gallery).row, "3", "Gallery is row 3");
+    assert.equal(placeOf(gallery).col, "2", "odd block: Gallery in column 2");
+    const block = wideBodyMatching(/^\.project-block$/);
+    assert.match(block, /align-items:start/, "tops of both columns aligned");
+    const evenText = wideBodyMatching(/nth-of-type\(2n\)>\.project-text$/);
+    assert.equal(placeOf(evenText).col, "2", "even block: text in column 2");
+    const evenGallery = wideBodyMatching(/nth-of-type\(2n\)>\.gallery$/);
+    assert.equal(
+      placeOf(evenGallery).col,
+      "1",
+      "even block: Gallery in column 1",
+    );
+    assert.match(evenGallery, /order:-1/, "even block: Gallery first");
+  });
+
+  test("on phones the header and meta row are one column, the name then the pitch, then the buttons above the Facts", () => {
+    const css = flat();
+    const phoneEnd =
+      css.indexOf("@media(min-width:860px)") > -1
+        ? css.indexOf("@media(min-width:860px)")
+        : css.indexOf("@media(width>=860px)");
+    const phone = css.slice(0, phoneEnd);
+    const bodyIn = (selector) =>
+      rulesOf(phone)
+        .filter(([sel]) => sel === selector.replace(/\s+/g, ""))
+        .map(([, body]) => body)
+        .join(";");
+    assert.match(bodyIn(".project-head"), /flex-direction:column/);
+    assert.match(bodyIn(".project-meta"), /flex-direction:column/);
   });
 
   test("the Gallery image is 8 by 5 and contained, never cropped", () => {

@@ -17,7 +17,7 @@ A Project chosen to appear in the Work section. Currently Markuli, Mnemora and l
 _Avoid_: Highlight, top project
 
 **Project Block**:
-The Work-section entry for one Featured Project: a full-width glass block with the name, its stack line as a subheader under the name, a one-line pitch, tabbed text (Story, Features, Under the hood) whose height never changes when switching tabs, the Download and Source buttons, and a Gallery. The Gallery sits on one side and swaps sides from one Project Block to the next. The four Facts run as a strip along the bottom of the block.
+The Work-section entry for one Featured Project: a full-width glass block. On wide screens its top band holds the name, with its stack line as a subheader under it, and the one-line pitch beside it on the same row. Under that, one row holds the Download and Source buttons with the four Facts beside them. Below sit the tabbed text (Story, Features, Under the hood), whose height never changes when switching tabs, and a Gallery. The Gallery sits on one side and swaps sides from one Project Block to the next.
 _Avoid_: Card, tile, panel, thumbnail
 
 **Gallery**:

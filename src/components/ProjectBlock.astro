@@ -23,11 +23,34 @@ const panelId = (key: string) => `panel-${project.id}-${key}`;
 ---
 
 <article id={`project-${project.id}`} class:list={["tile project-block reveal", `tint-${tint}`]} style={`--i: ${index}`}>
-  <div class="project-text">
-    <h3>{data.name}</h3>
-    <p class="stack">{data.stack}</p>
+  <header class="project-head">
+    <div class="project-title">
+      <h3>{data.name}</h3>
+      <p class="stack">{data.stack}</p>
+    </div>
     <p class="pitch">{data.pitch}</p>
+  </header>
 
+  <div class="project-meta">
+    <div class="links">
+      {
+        data.download && (
+          <a href={data.download} target="_blank" rel="noopener" class="button button-primary">
+            Download
+          </a>
+        )
+      }
+      <a href={data.repo} target="_blank" rel="noopener" class="button button-glass">
+        <GithubIcon />
+        Source
+      </a>
+    </div>
+    <ul class="facts" aria-label={`${data.name} facts`}>
+      {data.facts.map((fact) => <li>{fact.text}</li>)}
+    </ul>
+  </div>
+
+  <div class="project-text">
     <!-- Hidden until the script runs: without JavaScript all three panels are shown instead. -->
     <div class="tabs" role="tablist" aria-label={`${data.name} details`} hidden>
       {
@@ -62,24 +85,8 @@ const panelId = (key: string) => `panel-${project.id}-${key}`;
         <p class="hood">{data.hood}</p>
       </div>
     </div>
-
-    <p class="links">
-      {
-        data.download && (
-          <a href={data.download} target="_blank" rel="noopener" class="button button-primary">
-            Download
-          </a>
-        )
-      }
-      <a href={data.repo} target="_blank" rel="noopener" class="button button-glass">
-        <GithubIcon />
-        Source
-      </a>
-    </p>
   </div>
-  <ul class="facts" aria-label={`${data.name} facts`}>
-    {data.facts.map((fact) => <li>{fact.text}</li>)}
-  </ul>
+
   <Gallery name={data.name} slides={data.slides} eager={eager} />
 </article>
 

@@ -506,7 +506,7 @@ h1 span {
 /*
  * Hero Showcase: a deck of three opaque cards, the first Slide of each Featured Project.
  * The first (Markuli) is in front. The two behind are lifted with transform, so each header strip peeks above
- * the card in front and no text sits over another picture. The 88px top padding is the room for the peeks.
+ * the card in front and no text sits over another picture. The 104px top padding is the room for the peeks (88px) plus a 16px gap above the back card.
  */
 .hero-showcase {
   display: grid;
@@ -514,7 +514,7 @@ h1 span {
   position: relative;
   margin: var(--space-8) 0 0;
   padding: var(--tile-pad);
-  padding-top: 88px;
+  padding-top: 104px;
   box-sizing: border-box;
   list-style: none;
   border: 1px solid var(--edge);

@@ -2830,10 +2830,10 @@ describe("built Hero showcase: links to the Project Blocks, theme-aware pictures
     assert.ok(z[0] > z[1] && z[1] > z[2], `z-index not decreasing: ${z}`);
   });
 
-  test("the deck reserves 88px above the cards, so the two peeking header strips are not clipped", () => {
+  test("the deck reserves 104px above the cards: 88px for the two peeking header strips plus a 16px gap, so the back card never touches the panel border", () => {
     const body = cssBodies(builtCss()).get(".hero-showcase") ?? "";
     assert.ok(body, "expected a .hero-showcase rule");
-    assert.match(body, /padding-top:88px/);
+    assert.match(body, /padding-top:104px/);
   });
 
   test("the built CSS makes .hero two columns at 860px and up, whatever form the minifier writes the query in", () => {

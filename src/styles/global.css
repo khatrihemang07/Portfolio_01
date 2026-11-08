@@ -1461,7 +1461,7 @@ h1 span {
     flex-shrink: 0;
   }
 
-  /* Four Facts across the rest of the meta row. Cards hug their text rather than stretching. */
+  /* Four Facts across the rest of the meta row. All cards share one height. */
   .facts {
     flex: 1;
     min-width: 0;

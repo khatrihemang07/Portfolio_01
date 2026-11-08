@@ -30,7 +30,9 @@ const projects = defineCollection({
       slides: z
         .array(
           z.object({
-            image: image(),
+            // The dark picture is always there. The light one is optional: without it, the dark picture shows in both themes.
+            // (Same-size pairing is checked where the images render, in Gallery.astro: `image()` only resolves to real dimensions after schema validation.)
+            image: z.object({ dark: image(), light: image().optional() }),
             alt: z.string().min(1),
             caption: z.string().min(1),
           }),

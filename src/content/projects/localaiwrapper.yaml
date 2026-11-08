@@ -23,19 +23,29 @@ hood: "TypeScript on Bun. Every turn spawns a full CLI process with a timeout an
 stack: TypeScript · Bun
 repo: https://github.com/khatrihemang07/localAIWrapper
 slides:
-  - image: ../../assets/projects/localaiwrapper/slide1.png
+  - image:
+      dark: ../../assets/projects/localaiwrapper/slide1.png
+      light: ../../assets/projects/localaiwrapper/light/slide1.png
     alt: "A terminal window showing the command bun run start and the server's startup line: localAIWrapper listening on http://127.0.0.1:8080, with a maximum concurrency of 4 and a turn timeout of 600000 milliseconds."
     caption: "Start it: one command, local address only"
-  - image: ../../assets/projects/localaiwrapper/slide2.png
+  - image:
+      dark: ../../assets/projects/localaiwrapper/slide2.png
+      light: ../../assets/projects/localaiwrapper/light/slide2.png
     alt: "A terminal window showing a curl request to the models endpoint and the model names it returns: claude-opus, claude-sonnet, claude-haiku, codex-sol, codex-terra and codex-luna."
     caption: "Ask what's available: /v1/models"
-  - image: ../../assets/projects/localaiwrapper/slide3.png
+  - image:
+      dark: ../../assets/projects/localaiwrapper/slide3.png
+      light: ../../assets/projects/localaiwrapper/light/slide3.png
     alt: "A terminal window showing a curl request to the chat completions endpoint asking for a two-sentence explanation of an embedding, and the OpenAI-style JSON reply with the explanation, a stop reason and token usage."
     caption: "One request, one OpenAI-style reply"
-  - image: ../../assets/projects/localaiwrapper/slide4.png
+  - image:
+      dark: ../../assets/projects/localaiwrapper/slide4.png
+      light: ../../assets/projects/localaiwrapper/light/slide4.png
     alt: "A terminal window showing a streaming curl request that counts from 1 to 5, and the reply arriving as a series of data chunks that end with a stop reason and the marker DONE."
     caption: "Streaming works too, chunk by chunk"
-  - image: ../../assets/projects/localaiwrapper/slide5.png
+  - image:
+      dark: ../../assets/projects/localaiwrapper/slide5.png
+      light: ../../assets/projects/localaiwrapper/light/slide5.png
     alt: "A terminal window showing a request that asks for a JSON schema with a language and a strength, and the reply: a JSON object naming Rust and its memory-safety strength."
     caption: "Structured output from a JSON schema"
 order: 3

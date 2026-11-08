@@ -13,11 +13,11 @@ A piece of the owner's own work that is public and shown on the Site. Private or
 _Avoid_: Repo, app, case study
 
 **Featured Project**:
-A Project chosen to appear in the Work section. Currently markuli, Mnemora and localAIWrapper.
+A Project chosen to appear in the Work section. Currently Markuli, Mnemora and localAIWrapper.
 _Avoid_: Highlight, top project
 
 **Project Block**:
-The Work-section entry for one Featured Project: a full-width glass block with the name, a one-line pitch, tabbed text (Story, Features, Under the hood), four Facts, links, and a Gallery. The Gallery sits on one side and swaps sides from one Project Block to the next.
+The Work-section entry for one Featured Project: a full-width glass block with the name, its stack line as a subheader under the name, a one-line pitch, tabbed text (Story, Features, Under the hood) whose height never changes when switching tabs, the Download and Source buttons, and a Gallery. The Gallery sits on one side and swaps sides from one Project Block to the next. The four Facts run as a strip along the bottom of the block.
 _Avoid_: Card, tile, panel, thumbnail
 
 **Gallery**:
@@ -25,7 +25,7 @@ The swipeable row of Slides inside a Project Block, with previous and next butto
 _Avoid_: Carousel, slider, lightbox
 
 **Slide**:
-One image in a Gallery together with its one-line caption. Each Project Block has one to five.
+One image in a Gallery together with its one-line caption. Each Slide has a light and a dark version of its image, and the one matching the visitor's current theme is shown; a Slide without a light version shows the dark one in both themes. Each Project Block has one to five.
 _Avoid_: Screenshot, thumbnail, frame
 
 **Dock**:
@@ -47,6 +47,10 @@ _Avoid_: Scrollbar, progress bar, side nav
 **Hero Chip**:
 A small quiet pill under the Hero's Call to Action stating one fact about the owner's work (the stack: Rust, Go, TS and AI). It must never outweigh the name and intro. Replaces the earlier large Stat Tiles.
 _Avoid_: Stat Tile, badge, counter, widget
+
+**Hero Showcase**:
+The deck of three cards in the right half of the Hero, one per Featured Project. Each card shows the project's name, its stack line and the first Slide's image, and links to that Project's Project Block. The Markuli card is in front.
+_Avoid_: Hero image, collage, carousel
 
 **Fact**:
 A concrete, checkable claim on a Project Block, such as a size or a measured resource use. Each Project Block has four.

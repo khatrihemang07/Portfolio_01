@@ -18,7 +18,13 @@ function setupTabs(block: HTMLElement): void {
       const on = i === index;
       tab.setAttribute("aria-selected", String(on));
       tab.tabIndex = on ? 0 : -1;
-      if (panels[i]) panels[i].hidden = !on;
+      const panel = panels[i];
+      if (panel) {
+        // Inactive panels stay in the layout (one shared grid cell) but are faded out
+        // and inert, so they leave the tab order and the accessibility tree.
+        panel.classList.toggle("is-active", on);
+        panel.inert = !on;
+      }
     });
     if (focus) tabs[index]?.focus();
   }
@@ -58,10 +64,12 @@ function setupGallery(block: HTMLElement): void {
   ];
   const prev = controls.querySelector<HTMLButtonElement>("[data-gallery-prev]");
   const next = controls.querySelector<HTMLButtonElement>("[data-gallery-next]");
+  const count = controls.querySelector<HTMLElement>("[data-gallery-count]");
 
   let active = 0;
   const show = (index: number): void => {
     active = index;
+    if (count) count.textContent = `${index + 1} / ${slides.length}`;
     dots.forEach((dot, i) => {
       if (i === index) dot.setAttribute("aria-current", "true");
       else dot.removeAttribute("aria-current");

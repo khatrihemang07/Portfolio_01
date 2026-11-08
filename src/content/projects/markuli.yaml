@@ -1,8 +1,8 @@
-name: markuli
+name: Markuli
 pitch: Scribble on your screen, then make it vanish.
 story:
   - "Press a hotkey and your whole screen becomes a whiteboard. Draw an arrow at the bug, circle the number in the chart, then press the hotkey again and everything is gone."
-  - "Pointing at things on a screen shouldn't need a screen recorder or an app that takes five seconds to open. markuli opens in a blink, costs almost nothing while idle, and the ink is ported from Excalidraw's own drawing algorithm."
+  - "Pointing at things on a screen shouldn't need a screen recorder or an app that takes five seconds to open. Markuli opens in a blink, costs almost nothing while idle, and the ink is ported from Excalidraw's own drawing algorithm."
 features:
   - "Five tools: Select, Pen, Eraser, Laser and Hand, each on one key"
   - "Five colours and three widths, with right-click pickers for the rest"
@@ -23,7 +23,8 @@ stack: Rust · native macOS · no webview
 repo: https://github.com/khatrihemang07/markuli
 download: https://github.com/khatrihemang07/markuli/releases/latest
 slides:
-  - image: ../../assets/projects/markuli.png
-    alt: "markuli's orange hand-drawn ink over a demo analytics dashboard: an ellipse around the tallest bar in a signups chart, with an arrow pointing at it."
+  - image:
+      dark: ../../assets/projects/markuli.png
+    alt: "Markuli's orange hand-drawn ink over a demo analytics dashboard: an ellipse around the tallest bar in a signups chart, with an arrow pointing at it."
     caption: "The finished ink"
 order: 1

@@ -18,7 +18,7 @@ History: the first copy was approved on 2026-11-07. The revamp rewrote the Hero,
 
 ## Work
 
-- Label: Selected work. Order: markuli, Mnemora, localAIWrapper.
+- Label: Selected work. Order: Markuli, Mnemora, localAIWrapper.
 - Closing link under the Project Blocks: **See more of my work on GitHub →** (https://github.com/khatrihemang07)
 
 ## About
@@ -39,8 +39,8 @@ Most AI demos are a prompt box. Under a prompt box sits a lot of engineering: wh
 - LinkedIn: not yet; add when the URL exists
 - No phone number, no résumé link.
 
-## Metadata (unchanged from the first approval; the description does not mention AI yet)
+## Metadata (the description mentions AI)
 
 - Title: Hemang Khatri · Backend engineer and app builder
-- Description: Portfolio of Hemang Khatri: fast native apps and backend tools, including markuli, Mnemora and localAIWrapper.
+- Description: Portfolio of Hemang Khatri: AI tools and the fast native code under them, including Markuli, Mnemora and localAIWrapper.
 - 404: "Nothing here. Back to the work." (links to home)

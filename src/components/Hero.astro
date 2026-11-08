@@ -1,3 +1,29 @@
+---
+import { Picture } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  // The Featured Projects, already sorted, so the showcase follows the Work order.
+  projects: CollectionEntry<"projects">[];
+}
+
+const { projects } = Astro.props;
+
+// Each card shows the first Slide of its Project: the Hero is not the LCP image, so every picture stays lazy.
+const showcase = projects.map((project) => {
+  const [first] = project.data.slides;
+  if (!first) throw new Error(`Project ${project.id} has no Slide for the Hero showcase`);
+  return {
+    id: project.id,
+    name: project.data.name,
+    pitch: project.data.pitch,
+    stack: project.data.stack,
+    dark: first.image.dark,
+    light: first.image.light,
+  };
+});
+---
+
 <header id="top" class="hero">
   <div class="hero-intro rise" style="--i: 0">
     <h1>Hemang <span>Khatri</span></h1>
@@ -9,4 +35,44 @@
       </ul>
     </div>
   </div>
+  <ul class="hero-showcase" role="list">
+    {
+      showcase.map((card) => (
+        <li class="hero-showcase-item">
+          <a
+            class:list={["hero-card", { "has-light": card.light }]}
+            href={`#project-${card.id}`}
+            aria-label={`${card.name} ${card.stack}: ${card.pitch}`}
+          >
+            <span class="hero-card-label">
+              <span class="hero-card-name">{card.name}</span>
+              <span class="hero-card-stack">{card.stack}</span>
+            </span>
+            <Picture
+              src={card.dark}
+              alt=""
+              formats={["avif", "webp"]}
+              widths={[480, 960]}
+              sizes="(min-width: 860px) 36vw, 90vw"
+              loading="lazy"
+              fetchpriority="auto"
+              class="slide-dark"
+            />
+            {card.light && (
+              <Picture
+                src={card.light}
+                alt=""
+                formats={["avif", "webp"]}
+                widths={[480, 960]}
+                sizes="(min-width: 860px) 36vw, 90vw"
+                loading="lazy"
+                fetchpriority="auto"
+                class="slide-light"
+              />
+            )}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
 </header>

@@ -31,7 +31,7 @@ const validProject = ({
     .map((n) => `  - text: "Fact ${n}"\n    source: "Gate source."\n`)
     .join(""),
   hood = 'hood: "Gate hood."\n',
-  slides = '  - image: ../../assets/projects/markuli.png\n    alt: "Gate alt text."\n    caption: "Gate caption."\n',
+  slides = '  - image:\n      dark: ../../assets/projects/markuli.png\n    alt: "Gate alt text."\n    caption: "Gate caption."\n',
   repo = "repo: https://github.com/example/gate\n",
 } = {}) =>
   `name: gate
@@ -41,7 +41,7 @@ ${repo}slides:
 ${slides}order: 99
 `;
 const gateSlide = (n) =>
-  `  - image: ../../assets/projects/markuli.png\n    alt: "Alt ${n}."\n    caption: "Caption ${n}."\n`;
+  `  - image:\n      dark: ../../assets/projects/markuli.png\n    alt: "Alt ${n}."\n    caption: "Caption ${n}."\n`;
 
 const invalidCases = [
   [
@@ -66,7 +66,7 @@ const invalidCases = [
     "a Slide with empty alt",
     validProject({
       slides:
-        '  - image: ../../assets/projects/markuli.png\n    alt: ""\n    caption: "Gate caption."\n',
+        '  - image:\n      dark: ../../assets/projects/markuli.png\n    alt: ""\n    caption: "Gate caption."\n',
     }),
     "slides.0.alt",
   ],
@@ -74,7 +74,7 @@ const invalidCases = [
     "a Slide with empty caption",
     validProject({
       slides:
-        '  - image: ../../assets/projects/markuli.png\n    alt: "Gate alt."\n    caption: ""\n',
+        '  - image:\n      dark: ../../assets/projects/markuli.png\n    alt: "Gate alt."\n    caption: ""\n',
     }),
     "slides.0.caption",
   ],
@@ -152,6 +152,28 @@ function buildOnce() {
   return sharedBuild;
 }
 
+test("build fails when a Slide's light image is not the same size as its dark image", () => {
+  try {
+    writeFileSync(
+      invalidFile,
+      validProject({
+        slides:
+          '  - image:\n      dark: ../../assets/projects/markuli.png\n      light: ../../assets/projects/mnemora/home.png\n    alt: "Gate alt."\n    caption: "Gate caption."\n',
+      }),
+    );
+    const result = runBuild();
+    const output = `${result.stdout}\n${result.stderr}`;
+    assert.notEqual(
+      result.status,
+      0,
+      `expected astro build to fail\n${output}`,
+    );
+    assert.match(output, /must be the same size/);
+  } finally {
+    rmSync(invalidFile, { force: true });
+  }
+});
+
 test("no Fact source is still marked unverified", () => {
   for (const file of readdirSync(contentDir)) {
     const text = readFileSync(join(contentDir, file), "utf8");
@@ -202,7 +224,7 @@ for (const [label, yaml, field] of invalidCases) {
   });
 }
 
-test("build succeeds with the real Projects and renders markuli's Project Block", () => {
+test("build succeeds with the real Projects and renders Markuli's Project Block", () => {
   const result = buildOnce();
   assert.equal(
     result.status,
@@ -212,7 +234,7 @@ test("build succeeds with the real Projects and renders markuli's Project Block"
 
   const html = readFileSync(join(root, "dist", "index.html"), "utf8");
   assert.ok(html.includes("Hemang Khatri"), "expected the name");
-  assert.ok(html.includes("markuli"), "expected the markuli Project Block");
+  assert.ok(html.includes("Markuli"), "expected the Markuli Project Block");
   assert.ok(html.includes("<article"), "expected an article Project Block");
   assert.ok(
     html.includes(
@@ -227,7 +249,7 @@ test("build succeeds with the real Projects and renders markuli's Project Block"
 });
 
 const FACTS = {
-  markuli: [
+  Markuli: [
     "1.6 MB download",
     "11 MB idle RAM (Draw Mode off)",
     "0% idle CPU",
@@ -272,11 +294,21 @@ describe("built Site with three Project Blocks", () => {
     assert.equal(html().match(/<article[\s>]/g)?.length, 3);
   });
 
-  test("Project Blocks are ordered markuli, Mnemora, localAIWrapper", () => {
+  test("Project Blocks are ordered Markuli, Mnemora, localAIWrapper", () => {
     const names = articles().map(
       (article) => article.match(/<h3[^>]*>([^<]*)<\/h3>/)?.[1],
     );
-    assert.deepEqual(names, ["markuli", "Mnemora", "localAIWrapper"]);
+    assert.deepEqual(names, ["Markuli", "Mnemora", "localAIWrapper"]);
+  });
+
+  test("the first Project Block is Markuli, with the exact name and the pink tint", () => {
+    const [first] = articles();
+    assert.equal(
+      first.match(/<h3[^>]*>([^<]*)<\/h3>/)?.[1],
+      "Markuli",
+      "first <h3>",
+    );
+    assert.match(first.match(/<article[^>]*>/)[0], /\btint-pink\b/);
   });
 
   test("exactly 2 Download links, to the exact latest-release URLs of markuli and Mnemora", () => {
@@ -486,12 +518,13 @@ describe("built Site with three Project Blocks", () => {
     });
   });
 
-  test("each Project Block carries its Source link and a stack line", () => {
+  test("each Project Block carries its Source link, whose text is Source", () => {
     for (const name of Object.keys(FACTS)) {
-      assert.match(
-        blockOf(name),
-        /<a [^>]*href="https:\/\/github\.com\/khatrihemang07\/[^"]+"[^>]*>Source<\/a>/,
+      const link = (blockOf(name).match(/<a\b[^>]*>[\s\S]*?<\/a>/g) ?? []).find(
+        (a) => textOf(a) === "Source",
       );
+      assert.ok(link, `${name}: no Source link`);
+      assert.match(link, /href="https:\/\/github\.com\/khatrihemang07\/[^"]+"/);
     }
   });
 
@@ -703,6 +736,78 @@ describe("built full page: look, feel and content", () => {
     assert.ok(link, "expected a GitHub link");
     assert.match(link, /target="_blank"/);
     assert.match(link, /rel="[^"]*noopener[^"]*"/);
+  });
+
+  const svgAttr = (tag, name) =>
+    tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1];
+  const githubMarkD = (fragment) =>
+    fragment.match(/<svg\b[\s\S]*?<path\b[^>]*\sd="([^"]*)"/)?.[1];
+  const contactGithubLink = () =>
+    (sectionOf("contact").match(/<a\b[^>]*github-link[\s\S]*?<\/a>/) ??
+      [])[0] ?? "";
+  const moreWorkLink = () =>
+    (page().match(/<a\b[^>]*more-work[\s\S]*?<\/a>/) ?? [])[0] ?? "";
+
+  test("the Contact GitHub link shows the GitHub mark as an aria-hidden svg before the visible text GitHub", () => {
+    const link = contactGithubLink();
+    assert.ok(link, "expected the Contact GitHub link");
+    const svg = link.match(/<svg\b[^>]*>/)?.[0] ?? "";
+    assert.ok(svg, "expected an svg in the Contact GitHub link");
+    assert.equal(svgAttr(svg, "aria-hidden"), "true");
+    assert.equal(svgAttr(svg, "focusable"), "false");
+    assert.equal(svgAttr(svg, "viewBox"), "0 0 16 16");
+    assert.match(link, /class="[^"]*\bbutton-glass\b/, "expected a glass pill");
+    assert.ok(
+      link.indexOf("<svg") < link.indexOf("GitHub</"),
+      "expected the svg before the text",
+    );
+    assert.equal(
+      textOf(link),
+      "GitHub",
+      "the accessible text is still just GitHub",
+    );
+    assert.match(link, /href="https:\/\/github\.com\/khatrihemang07"/);
+    assert.match(link, /target="_blank"/);
+    assert.match(link, /rel="noopener"/);
+  });
+
+  test("the See more of my work on GitHub link carries an aria-hidden svg before its text", () => {
+    const link = moreWorkLink();
+    assert.ok(link, "expected the See more link");
+    const svg = link.match(/<svg\b[^>]*>/)?.[0] ?? "";
+    assert.ok(svg, "expected an svg in the See more link");
+    assert.equal(svgAttr(svg, "aria-hidden"), "true");
+    assert.ok(
+      link.indexOf("<svg") < link.indexOf("See more"),
+      "expected the svg before the text",
+    );
+    assert.equal(textOf(link), "See more of my work on GitHub →");
+  });
+
+  test("the GitHub mark path is one shared octicon: the same d in every Source link, the Contact link and the See more link", () => {
+    const articles = page().match(/<article[\s\S]*?<\/article>/g) ?? [];
+    assert.equal(articles.length, 3, "expected three Project Blocks");
+    const contactD = githubMarkD(contactGithubLink());
+    const moreD = githubMarkD(moreWorkLink());
+    assert.ok(contactD, "expected a path in the Contact link");
+    assert.equal(moreD, contactD, "See more must use the same path");
+    for (const article of articles) {
+      const source = (article.match(/<a\b[^>]*>[\s\S]*?<\/a>/g) ?? []).find(
+        (a) => textOf(a) === "Source",
+      );
+      assert.ok(source, "every block has a Source link");
+      assert.equal(
+        githubMarkD(source),
+        contactD,
+        "Source must use the same path",
+      );
+    }
+    const occurrences = page().split(`d="${contactD}"`).length - 1;
+    assert.equal(
+      occurrences,
+      articles.length + 2,
+      "expected the mark in 3 Source links, the Contact link and the See more link, and nowhere else",
+    );
   });
 
   test("no tel: link, no phone-like number, no resume or CV link", () => {
@@ -1201,7 +1306,7 @@ describe("launch hardening: built release output", () => {
     );
     assert.equal(
       metaContent(head(), "name", "description"),
-      "Portfolio of Hemang Khatri: fast native apps and backend tools, including markuli, Mnemora and localAIWrapper.",
+      "Portfolio of Hemang Khatri: AI tools and the fast native code under them, including Markuli, Mnemora and localAIWrapper.",
     );
   });
 
@@ -1214,7 +1319,7 @@ describe("launch hardening: built release output", () => {
     );
     assert.equal(
       metaContent(page, "property", "og:description"),
-      "Portfolio of Hemang Khatri: fast native apps and backend tools, including markuli, Mnemora and localAIWrapper.",
+      "Portfolio of Hemang Khatri: AI tools and the fast native code under them, including Markuli, Mnemora and localAIWrapper.",
     );
     assert.equal(metaContent(page, "property", "og:url"), `${SITE}/`);
     const images = metaTags(page).filter((tag) =>
@@ -1226,7 +1331,7 @@ describe("launch hardening: built release output", () => {
     assert.equal(metaContent(page, "property", "og:image:height"), "630");
     assert.equal(
       metaContent(page, "property", "og:image:alt"),
-      "Hemang Khatri: fast native apps and the backends behind them. markuli, Mnemora, localAIWrapper.",
+      "Hemang Khatri: AI tools and the fast native code under them. Markuli, Mnemora, localAIWrapper.",
     );
   });
 
@@ -1869,6 +1974,23 @@ describe("built Project Block layout, scrollbar and Gallery", () => {
     assert.match(flat(), /\.gallery-slide\{[^}]*scroll-snap-align:/);
   });
 
+  test("the Gallery caption is padded in from the track's rounded corner, so its first letter is not clipped", () => {
+    const body = cssBodies(builtCss()).get(".gallery-slidefigcaption") ?? "";
+    assert.ok(body, "expected a .gallery-slide figcaption rule");
+    // Horizontal inset: padding-inline, padding-left or padding-right, or the horizontal part of a shorthand.
+    const insets = [
+      ...body.matchAll(/padding(-inline|-left|-right)?:([^;]+)/g),
+    ].map(([, side, value]) => {
+      if (side) return value;
+      const parts = value.trim().split(/\s+/);
+      return parts[1] ?? parts[0];
+    });
+    assert.ok(
+      insets.some((value) => !/^0(px)?$/.test(value)),
+      `expected a non-zero horizontal padding on the caption, got "${body}"`,
+    );
+  });
+
   test("there is a See more of my work on GitHub link with a 44px touch target", () => {
     const link = (page().match(/<a\b[^>]*>[\s\S]*?<\/a>/g) ?? []).find((a) =>
       textOf(a).startsWith("See more of my work on GitHub"),
@@ -1926,6 +2048,287 @@ describe("built Project Block layout, scrollbar and Gallery", () => {
   });
 });
 
+// Project Block structure, tabs, buttons, Facts strip and Gallery counter, read from the built HTML, CSS and script.
+describe("built Project Block structure, tabs, buttons, Facts strip and Gallery", () => {
+  before(() => {
+    const result = buildOnce();
+    assert.equal(
+      result.status,
+      0,
+      `astro build failed\n${result.stdout}\n${result.stderr}`,
+    );
+  });
+
+  const articlesHtml = () => page().match(/<article[\s\S]*?<\/article>/g) ?? [];
+  const flat = () => builtCss().replace(/\s+/g, "");
+  const attrOf = (tag, name) =>
+    tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1];
+  const rulesOf = (css) =>
+    [...css.matchAll(/([^{}@;][^{}]*)\{([^{}]*)\}/g)].map((m) => [m[1], m[2]]);
+  // Each rule's selector and body with all whitespace removed, so selectors compare exactly.
+  const bodyOf = (selector, css = builtCss()) =>
+    rulesOf(css)
+      .filter(
+        ([sel]) => sel.replace(/\s+/g, "") === selector.replace(/\s+/g, ""),
+      )
+      .map(([, body]) => body.replace(/\s+/g, ""))
+      .join(";");
+  // How many <div> elements enclose the first occurrence of marker: 0 is a direct child of the article.
+  const divDepthAt = (html, marker) => {
+    const before = html.slice(0, html.indexOf(marker));
+    return (
+      (before.match(/<div[\s>]/g) ?? []).length -
+      (before.match(/<\/div>/g) ?? []).length
+    );
+  };
+  const bundledScript = () =>
+    [...page().matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)]
+      .filter(([, attrs]) => /type="module"/.test(attrs))
+      .map(([, attrs, body]) => {
+        const src = attrs.match(/\ssrc="([^"]+)"/)?.[1];
+        return src ? readFileSync(join(root, "dist", src), "utf8") : body;
+      })
+      .find((js) => /ArrowRight/.test(js)) ?? "";
+
+  test("the stack line is the subheader: directly under the name, before the pitch, in the text column", () => {
+    for (const article of articlesHtml()) {
+      const h3 = article.indexOf("<h3");
+      const stack = article.indexOf('class="stack"');
+      const pitch = article.indexOf('class="pitch"');
+      assert.ok(
+        h3 > -1 && stack > h3 && pitch > stack,
+        "order: name, stack, pitch",
+      );
+      assert.doesNotMatch(
+        article.slice(h3, article.lastIndexOf("<p", stack)),
+        /<(p|ul|div|button)\b/,
+      );
+      assert.equal(
+        divDepthAt(article, 'class="stack"'),
+        1,
+        "stack is in the text column",
+      );
+    }
+  });
+
+  test("the Facts are a direct child of the Project Block, outside the text column", () => {
+    for (const article of articlesHtml()) {
+      assert.equal(divDepthAt(article, 'class="facts"'), 0, "Facts depth");
+      assert.equal(divDepthAt(article, "<h3"), 1, "name depth");
+      assert.equal(divDepthAt(article, '<div class="tabs"'), 1, "tabs depth");
+      assert.equal(divDepthAt(article, 'class="links"'), 1, "links depth");
+    }
+  });
+
+  test("Download is a primary gradient button, and Source a glass button with an inline GitHub mark", () => {
+    for (const article of articlesHtml()) {
+      const links = article.match(/<a\b[^>]*>[\s\S]*?<\/a>/g) ?? [];
+      const download = links.find((a) => textOf(a) === "Download");
+      if (download) {
+        assert.match(attrOf(download, "class") ?? "", /\bbutton-primary\b/);
+      }
+      const source = links.find((a) => textOf(a) === "Source");
+      assert.ok(source, "every block has a Source link");
+      assert.match(attrOf(source, "class") ?? "", /\bbutton-glass\b/);
+      const svg = source.match(/<svg\b[^>]*>/)?.[0] ?? "";
+      assert.ok(svg, "Source has an inline svg");
+      assert.equal(attrOf(svg, "aria-hidden"), "true");
+      assert.equal(attrOf(svg, "viewBox"), "0 0 16 16");
+      assert.ok(
+        source.includes('d="M8 0C3.58 0 0 3.58 0 8'),
+        "GitHub mark path",
+      );
+      assert.doesNotMatch(source, /https?:\/\/[^"]*\.(svg|png)/);
+    }
+  });
+
+  test("the button styles are built: primary uses the CTA gradient, glass has an edge and no gradient", () => {
+    const primary = bodyOf(".button-primary");
+    assert.match(primary, /background:var\(--gradient-cta\)/);
+    const glass = bodyOf(".button-glass");
+    assert.match(glass, /border:1px/);
+    assert.match(glass, /var\(--glass\)/);
+    assert.doesNotMatch(glass, /gradient-cta/);
+  });
+
+  test("once tabs are ready, all three panels share one grid cell, so the block is as tall as its tallest panel", () => {
+    assert.match(bodyOf(".tab-panels"), /display:grid/);
+    assert.match(bodyOf(".tabs-ready .tabpanel"), /grid-area:1\/1(;|$)/);
+  });
+
+  test("inactive panels are hidden with visibility and opacity, never display:none or the hidden attribute", () => {
+    const inactive = bodyOf(".tabs-ready .tabpanel");
+    assert.match(inactive, /visibility:hidden/);
+    assert.match(inactive, /opacity:0/);
+    assert.doesNotMatch(inactive, /display:none/);
+    const active = bodyOf(".tabs-ready .tabpanel.is-active");
+    assert.match(active, /visibility:visible/);
+    assert.match(active, /opacity:1/);
+    assert.doesNotMatch(flat(), /\.tabpanel\[hidden\]/);
+  });
+
+  test("panels fade over about 200ms only when motion is allowed", () => {
+    const allowedBlocks = mediaBlocks(
+      builtCss(),
+      "(prefers-reduced-motion: no-preference)",
+    );
+    const allowed = allowedBlocks.join("");
+    assert.match(
+      allowed,
+      /\.tabs-ready\.tabpanel\{[^}]*transition:[^}]*(\.2s|200ms)/,
+    );
+    let outside = flat();
+    for (const block of allowedBlocks) outside = outside.replace(block, "");
+    assert.doesNotMatch(outside, /\.tabs-ready\.tabpanel\{[^}]*transition/);
+  });
+
+  test("the script toggles inert and an is-active class on the panels", () => {
+    const js = bundledScript();
+    assert.match(js, /inert/, "inert is set on inactive panels");
+    assert.match(js, /is-active/, "the active panel gets is-active");
+  });
+
+  test("on wide screens the Facts are a full-width strip on grid row 2, four across", () => {
+    const wide = mediaBlocks(builtCss(), "(width>=860px)").join("");
+    assert.match(
+      wide,
+      /\.facts\{[^}]*(grid-area:2\/1\/auto\/-1|grid-column:1\/-1)/,
+    );
+    assert.match(wide, /\.facts\{[^}]*(grid-area:2\/|grid-row:2)/);
+    assert.match(wide, /\.facts\{[^}]*repeat\(4/);
+  });
+
+  test("the Gallery image is 8 by 5 and contained, never cropped", () => {
+    const body = bodyOf(".gallery-image");
+    assert.match(body, /aspect-ratio:8\/5/);
+    assert.match(body, /object-fit:contain/);
+    // Scoped to the Gallery image: the Hero showcase uses cover for its own cards.
+    assert.doesNotMatch(body, /object-fit:cover/);
+  });
+
+  test("the letterbox behind a Slide image matches its theme variant, so the 8:5 frame never shows a dark band beside a light image", () => {
+    assert.match(bodyOf(".gallery-image.slide-light"), /background:#fbf9f5/);
+    assert.match(bodyOf(".gallery-image.slide-dark"), /background:#100e0b/);
+  });
+
+  test("each Slide shows its caption above the image", () => {
+    for (const article of articlesHtml()) {
+      for (const figure of article.match(/<figure[\s\S]*?<\/figure>/g) ?? []) {
+        const caption = figure.indexOf("<figcaption");
+        const image = figure.search(/<picture|<img/);
+        assert.ok(
+          caption > -1 && caption < image,
+          `caption before image: ${figure.slice(0, 120)}`,
+        );
+      }
+    }
+  });
+
+  test("each Gallery has an aria-hidden n / N counter, starting at 1 / N, inside the controls", () => {
+    for (const article of articlesHtml()) {
+      const slides = article.match(/<figure\b/g)?.length ?? 0;
+      const counter =
+        article.match(
+          /<[a-z]+[^>]*data-gallery-count[^>]*>[\s\S]*?<\/[a-z]+>/,
+        )?.[0] ?? "";
+      assert.ok(counter, "counter exists");
+      assert.equal(attrOf(counter, "aria-hidden"), "true");
+      assert.equal(textOf(counter), `1 / ${slides}`);
+      assert.ok(
+        article.indexOf("data-gallery-count") >
+          article.indexOf("data-gallery-controls"),
+        "counter sits inside the controls",
+      );
+    }
+  });
+});
+
+// Theme-aware Slides: a Slide may have a light picture beside its dark one.
+// Built CSS is minified, so selectors are compared with whitespace and quotes removed.
+const sameSelector = (selector) => selector.replace(/[\s"']/g, "");
+function cssBodies(css) {
+  const bodies = new Map();
+  for (const [, selectors, body] of css.matchAll(/([^{}@;]+)\{([^{}]*)\}/g)) {
+    for (const selector of selectors.split(",")) {
+      const key = sameSelector(selector);
+      bodies.set(key, `${bodies.get(key) ?? ""}${body.replace(/\s+/g, "")};`);
+    }
+  }
+  return bodies;
+}
+
+describe("theme-aware Slides: built CSS swaps the dark and light pictures", () => {
+  before(() => {
+    const result = buildOnce();
+    assert.equal(
+      result.status,
+      0,
+      `astro build failed\n${result.stdout}\n${result.stderr}`,
+    );
+  });
+
+  const bodies = () => cssBodies(builtCss());
+  const darkSystemBodies = () =>
+    cssBodies(mediaBlocks(builtCss(), "(prefers-color-scheme:dark)").join(";"));
+  const hides = (map, selector) =>
+    (map.get(sameSelector(selector)) ?? "").includes("display:none");
+  const shows = (map, selector) =>
+    (map.get(sameSelector(selector)) ?? "").includes("display:block");
+
+  test("the light picture is hidden by default", () => {
+    assert.ok(hides(bodies(), ".slide-light"), "expected .slide-light hidden");
+  });
+
+  test("in the light theme (default and data-theme light) the light picture shows and the dark one hides", () => {
+    const map = bodies();
+    assert.ok(shows(map, ".has-light .slide-light"), "default light shows");
+    assert.ok(hides(map, ".has-light .slide-dark"), "default light hides dark");
+    assert.ok(
+      shows(map, ':root[data-theme="light"] .has-light .slide-light'),
+      "data-theme light shows",
+    );
+    assert.ok(
+      hides(map, ':root[data-theme="light"] .has-light .slide-dark'),
+      "data-theme light hides dark",
+    );
+  });
+
+  test("data-theme dark swaps back to the dark picture", () => {
+    const map = bodies();
+    assert.ok(
+      hides(map, ':root[data-theme="dark"] .has-light .slide-light'),
+      "data-theme dark hides light",
+    );
+    assert.ok(
+      shows(map, ':root[data-theme="dark"] .has-light .slide-dark'),
+      "data-theme dark shows dark",
+    );
+  });
+
+  test("with no data-theme, system dark swaps to the dark picture inside prefers-color-scheme dark", () => {
+    const map = darkSystemBodies();
+    assert.ok(
+      hides(map, ":root:not([data-theme]) .has-light .slide-light"),
+      "system dark hides light",
+    );
+    assert.ok(
+      shows(map, ":root:not([data-theme]) .has-light .slide-dark"),
+      "system dark shows dark",
+    );
+  });
+
+  test("a Slide without a light picture keeps its dark picture in both themes", () => {
+    for (const [selector, body] of bodies()) {
+      if (selector.includes("slide-dark") && body.includes("display:none")) {
+        assert.ok(
+          selector.includes("has-light"),
+          `${selector} hides the dark picture of a Slide without a light one`,
+        );
+      }
+    }
+  });
+});
+
 // Deployment: the Cloudflare Workers build must install and deploy this repo.
 describe("deployment config", () => {
   const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
@@ -1959,6 +2362,292 @@ describe("deployment config", () => {
       config.preview_urls,
       false,
       "no public per-version preview addresses",
+    );
+  });
+});
+
+// Kept last: this build leaves a temporary Project in dist/, which no later test reads.
+describe("theme-aware Slides: built HTML carries the light picture only where one exists", () => {
+  const fixtureSlides = [
+    '  - image:\n      dark: ../../assets/projects/markuli.png\n      light: ../../assets/projects/markuli.png\n    alt: "Gate light alt."\n    caption: "Gate light caption."\n',
+    '  - image:\n      dark: ../../assets/projects/markuli.png\n    alt: "Gate dark alt."\n    caption: "Gate dark caption."\n',
+  ].join("");
+  let html = "";
+  let article = "";
+  let figures = [];
+
+  before(() => {
+    try {
+      writeFileSync(invalidFile, validProject({ slides: fixtureSlides }));
+      const result = runBuild();
+      assert.equal(
+        result.status,
+        0,
+        `a Project with dark and light Slides must build\n${result.stdout}\n${result.stderr}`,
+      );
+      html = readFileSync(join(root, "dist", "index.html"), "utf8");
+      article =
+        html.match(
+          /<article id="project-zz-gate-invalid"[\s\S]*?<\/article>/,
+        )?.[0] ?? "";
+      figures = article.match(/<figure[\s\S]*?<\/figure>/g) ?? [];
+    } finally {
+      rmSync(invalidFile, { force: true });
+    }
+  });
+
+  test("a Slide with a light picture builds both pictures, classed slide-dark and slide-light, in a has-light figure", () => {
+    assert.equal(figures.length, 2, "expected the two fixture Slides");
+    const [withLight] = figures;
+    assert.match(withLight.match(/<figure[^>]*>/)[0], /\bhas-light\b/);
+    const imgs = withLight.match(/<img[^>]*>/g) ?? [];
+    assert.equal(imgs.length, 2, "expected a dark and a light img");
+    assert.ok(
+      imgs.some((tag) => /\bslide-dark\b/.test(tag)),
+      "slide-dark img",
+    );
+    assert.ok(
+      imgs.some((tag) => /\bslide-light\b/.test(tag)),
+      "slide-light img",
+    );
+    for (const tag of imgs) {
+      assert.match(
+        tag,
+        /alt="Gate light alt\."/,
+        "both pictures share the alt",
+      );
+    }
+  });
+
+  test("a Slide with only a dark picture builds no slide-light picture and no has-light class", () => {
+    const withoutLight = figures[1];
+    assert.doesNotMatch(withoutLight, /slide-light/);
+    assert.doesNotMatch(withoutLight.match(/<figure[^>]*>/)[0], /has-light/);
+    assert.match(withoutLight, /\bslide-dark\b/);
+  });
+
+  test("both pictures of a Slide with a light one are lazy, so the hidden one is not fetched eagerly", () => {
+    const imgs = figures[0].match(/<img[^>]*>/g) ?? [];
+    for (const tag of imgs) {
+      assert.match(tag, /loading="lazy"/);
+    }
+  });
+});
+
+// Hero Showcase: three glass cards of the first Slide of each Featured Project, beside the Hero text.
+describe("built Hero showcase: links to the Project Blocks, theme-aware pictures and a two-column Hero", () => {
+  const SHOWCASE_ORDER = ["markuli", "mnemora", "localaiwrapper"];
+  // A fresh build: the fixture Project tests above leave a fourth Project in the shared build output.
+  before(() => {
+    const result = runBuild();
+    assert.equal(
+      result.status,
+      0,
+      `astro build failed\n${result.stdout}\n${result.stderr}`,
+    );
+  });
+
+  const showcase = () =>
+    page().match(/<ul class="hero-showcase"[\s\S]*?<\/ul>/)?.[0] ?? "";
+  const showcaseItems = () => showcase().match(/<li\b[\s\S]*?<\/li>/g) ?? [];
+  const showcaseLinks = () => showcase().match(/<a\b[\s\S]*?<\/a>/g) ?? [];
+  // The per-link tests must not pass on an empty list, so they insist on all three links.
+  const linksOrFail = () => {
+    assert.equal(showcaseLinks().length, 3, "expected three showcase links");
+    return showcaseLinks();
+  };
+  const attrOf = (tag, name) =>
+    tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1];
+  const imgsOf = (fragment) => fragment.match(/<img\b[^>]*>/g) ?? [];
+
+  test("the Hero has a ul.hero-showcase list, after the Call to Action inside the header", () => {
+    const html = page();
+    const header =
+      html.match(/<header[^>]*class="hero"[\s\S]*?<\/header>/)?.[0] ?? "";
+    assert.ok(
+      header.includes('<ul class="hero-showcase" role="list"'),
+      "expected the showcase list in the Hero",
+    );
+    assert.ok(
+      header.indexOf('class="cta"') < header.indexOf('class="hero-showcase"'),
+      "the showcase must come after the Call to Action",
+    );
+    assert.equal((html.match(/class="hero-showcase"/g) ?? []).length, 1);
+  });
+
+  test("the Hero showcase has exactly three links, to markuli, mnemora and localaiwrapper in that order", () => {
+    assert.equal(showcaseItems().length, 3, "expected three list items");
+    assert.equal(showcaseLinks().length, 3, "expected three links");
+    assert.deepEqual(
+      showcaseLinks().map((link) =>
+        attrOf(link.match(/<a\b[^>]*>/)[0], "href"),
+      ),
+      SHOWCASE_ORDER.map((id) => `#project-${id}`),
+    );
+  });
+
+  test("each showcase link wraps a picture", () => {
+    for (const link of linksOrFail()) {
+      assert.match(
+        link,
+        /<picture\b/,
+        `link without a picture: ${link.slice(0, 120)}`,
+      );
+    }
+  });
+
+  test("each showcase link has a non-empty aria-label that names its project", () => {
+    const names = ["Markuli", "Mnemora", "localAIWrapper"];
+    linksOrFail().forEach((link, i) => {
+      const label = attrOf(link.match(/<a\b[^>]*>/)[0], "aria-label") ?? "";
+      assert.ok(label.trim().length > 0, `link ${i} has no aria-label`);
+      assert.ok(
+        label.includes(names[i]),
+        `link ${i} label "${label}" does not name ${names[i]}`,
+      );
+      // WCAG 2.5.3 Label in Name: the visible text (name and stack line) must be inside the accessible name.
+      const stack = link.match(/hero-card-stack">([^<]*)</)?.[1]?.trim() ?? "";
+      assert.ok(stack.length > 0, `link ${i} shows no stack line`);
+      assert.ok(
+        label.includes(stack),
+        `link ${i} label "${label}" does not contain the visible stack "${stack}"`,
+      );
+    });
+  });
+
+  test("the images inside the showcase have empty alt text, since the link name carries the meaning", () => {
+    const imgs = imgsOf(showcase());
+    assert.ok(imgs.length >= 3, "expected the showcase pictures");
+    // Astro writes an empty alt as a bare attribute, so both spellings count as empty.
+    for (const img of imgs) {
+      assert.match(
+        img,
+        /\salt(=""|(?=[\s/>]))/,
+        `showcase image has no empty alt: ${img}`,
+      );
+      assert.doesNotMatch(
+        img,
+        /\balt="[^"]/,
+        `showcase image has text alt: ${img}`,
+      );
+    }
+  });
+
+  test("every showcase link target id exists exactly once in the page", () => {
+    const html = page();
+    for (const link of linksOrFail()) {
+      const href = attrOf(link.match(/<a\b[^>]*>/)[0], "href");
+      const id = href.slice(1);
+      const count = (html.match(new RegExp(`\\sid="${id}"`, "g")) ?? []).length;
+      assert.equal(count, 1, `expected exactly one element with id ${id}`);
+    }
+  });
+
+  test("no showcase image is eager or high priority: the Hero text is the LCP", () => {
+    // The localAIWrapper card also has a light picture, so there are at least three.
+    assert.ok(imgsOf(showcase()).length >= 3, "expected the showcase pictures");
+    for (const img of imgsOf(showcase())) {
+      assert.notEqual(attrOf(img, "loading"), "eager", img);
+      assert.notEqual(attrOf(img, "fetchpriority"), "high", img);
+      assert.equal(attrOf(img, "loading"), "lazy", img);
+    }
+  });
+
+  test("every showcase link has a slide-dark picture, and a slide-light one only inside a has-light link", () => {
+    for (const link of linksOrFail()) {
+      const imgs = imgsOf(link);
+      assert.ok(
+        imgs.some((img) => /\bslide-dark\b/.test(attrOf(img, "class") ?? "")),
+        "expected a slide-dark picture",
+      );
+      const light = imgs.filter((img) =>
+        /\bslide-light\b/.test(attrOf(img, "class") ?? ""),
+      );
+      if (light.length > 0) {
+        assert.match(
+          link.match(/<a\b[^>]*>/)[0],
+          /\bhas-light\b/,
+          "a slide-light picture needs a has-light wrapper",
+        );
+      }
+    }
+  });
+
+  test("each showcase card puts its header strip (name and stack) before its picture inside the link", () => {
+    for (const link of linksOrFail()) {
+      const label = link.indexOf("hero-card-label");
+      const picture = link.indexOf("<picture");
+      assert.ok(
+        label > -1,
+        `link without a header strip: ${link.slice(0, 120)}`,
+      );
+      assert.ok(
+        label < picture,
+        `header strip must precede the picture: ${link.slice(0, 160)}`,
+      );
+    }
+  });
+
+  test("the built CSS has no rotate() in any hero showcase or hero card rule", () => {
+    const bodies = [...cssBodies(builtCss())].filter(([selector]) =>
+      /hero-showcase|hero-card/.test(selector),
+    );
+    assert.ok(bodies.length > 0, "expected showcase rules in the built CSS");
+    for (const [selector, body] of bodies) {
+      assert.doesNotMatch(body, /rotate\(/, `rotate in ${selector}`);
+    }
+  });
+
+  test("the showcase cards are opaque: the card background is a solid theme token, not the glass one", () => {
+    const body = cssBodies(builtCss()).get(".hero-card") ?? "";
+    assert.ok(body, "expected a .hero-card rule");
+    assert.match(body, /background:var\(--bg\)/);
+    assert.doesNotMatch(body, /background:var\(--glass\)/);
+  });
+
+  test("the deck stacks the three cards with a z-index strictly decreasing in DOM order, the first (Markuli) in front", () => {
+    const bodies = cssBodies(builtCss());
+    // The minifier writes :nth-child(1) as :first-child, so both spellings count for the first card.
+    const selectorsOf = (n) =>
+      n === 1
+        ? [
+            ".hero-showcase-item:nth-child(1)",
+            ".hero-showcase-item:first-child",
+          ]
+        : [`.hero-showcase-item:nth-child(${n})`];
+    const zOf = (n) => {
+      const values = selectorsOf(n).flatMap((selector) =>
+        [...(bodies.get(selector) ?? "").matchAll(/z-index:(-?\d+)/g)].map(
+          (match) => Number(match[1]),
+        ),
+      );
+      assert.ok(values.length > 0, `expected a z-index on card ${n}`);
+      return values[values.length - 1];
+    };
+    const z = [1, 2, 3].map(zOf);
+    assert.ok(z[0] > z[1] && z[1] > z[2], `z-index not decreasing: ${z}`);
+  });
+
+  test("the deck reserves 88px above the cards, so the two peeking header strips are not clipped", () => {
+    const body = cssBodies(builtCss()).get(".hero-showcase") ?? "";
+    assert.ok(body, "expected a .hero-showcase rule");
+    assert.match(body, /padding-top:88px/);
+  });
+
+  test("the built CSS makes .hero two columns at 860px and up, whatever form the minifier writes the query in", () => {
+    const css = builtCss();
+    const blocks = [
+      ...mediaBlocks(css, "(min-width:860px)"),
+      ...mediaBlocks(css, "(width>=860px)"),
+    ];
+    assert.ok(blocks.length > 0, "expected a 860px media block");
+    const rules = cssBodies(blocks.join(";"));
+    const body = rules.get(".hero") ?? "";
+    const tracks = body.match(/grid-template-columns:([^;]+)/)?.[1] ?? "";
+    assert.ok(
+      (tracks.match(/minmax\([^)]*\)|[\d.]+(fr|%)|auto|\d+px/g) ?? []).length >=
+        2,
+      `expected two columns in .hero at 860px, got "${tracks}"`,
     );
   });
 });

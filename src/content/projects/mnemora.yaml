@@ -23,19 +23,29 @@ stack: Rust · Tauri 2 · TypeScript
 repo: https://github.com/khatrihemang07/Mnemora_v1
 download: https://github.com/khatrihemang07/Mnemora_v1/releases/latest
 slides:
-  - image: ../../assets/projects/mnemora/home.png
-    alt: "Mnemora's Home screen on a dark theme: a greeting banner and a clock, a Journal card with today's entry, a Todo card with a task due today, and a sidebar listing Home, Journal, Todo with its lists, AI and Settings."
+  - image:
+      dark: ../../assets/projects/mnemora/home.png
+      light: ../../assets/projects/mnemora/light/home.png
+    alt: "Mnemora's Home screen: a greeting banner and a clock, a Journal card with today's entry, a Todo card with a task due today, and a sidebar listing Home, Journal, Todo, AI and Settings."
     caption: "Home: one shell, one card per module"
-  - image: ../../assets/projects/mnemora/journal.png
+  - image:
+      dark: ../../assets/projects/mnemora/journal.png
+      light: ../../assets/projects/mnemora/light/journal.png
     alt: "Mnemora's Journal: days listed newest first, each with a timestamp and a short fictional entry, a Today badge on the latest day, and a Write box at the bottom."
     caption: "Journal: every day, newest first"
-  - image: ../../assets/projects/mnemora/todo.png
-    alt: "Mnemora's Todo module grouped by list: Home with five open tasks and Trips and plans with three, each with a priority marker, a note and a due date."
-    caption: "Todo: lists, priorities and due dates"
-  - image: ../../assets/projects/mnemora/ai.png
-    alt: "Mnemora's AI module before any provider is connected: an Add a Provider button, an explanation that answers come from the Local AI Wrapper on this machine or another service, and a question box that reads Ask about your journal and tasks."
-    caption: "AI: bring your own provider, such as a local wrapper"
-  - image: ../../assets/projects/mnemora/settings.png
+  - image:
+      dark: ../../assets/projects/mnemora/todo.png
+      light: ../../assets/projects/mnemora/light/todo.png
+    alt: "Mnemora's Todo module on its Today view: one open priority 1 task, Book dentist appointment, a progress bar reading 1 of 2 done, a completed task, Return library books, and a sidebar with Inbox, Today, Upcoming, All, Done and the Home list."
+    caption: "Todo: Today, lists and priorities"
+  - image:
+      dark: ../../assets/projects/mnemora/ai.png
+      light: ../../assets/projects/mnemora/light/ai.png
+    alt: "Mnemora's AI module answering a question about the journal and tasks: the answer lists two journal entries about guitar and one task due today, with Sources chips underneath that link to the two entries and the Book dentist appointment task."
+    caption: "AI: ask in plain words, see which entries it used"
+  - image:
+      dark: ../../assets/projects/mnemora/settings.png
+      light: ../../assets/projects/mnemora/light/settings.png
     alt: "Mnemora's Settings opened on Shortcuts: a list of keyboard shortcuts such as the command palette, go to Journal and go to Todo, with a section menu beside it for Appearance, General, Navigation, Data and storage, Modules and more."
     caption: "Settings: keyboard-first, with a shortcut for everything"
 order: 2

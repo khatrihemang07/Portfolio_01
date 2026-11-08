@@ -503,6 +503,126 @@ h1 span {
   letter-spacing: 0.02em;
 }
 
+/*
+ * Hero Showcase: a deck of three opaque cards, the first Slide of each Featured Project.
+ * The first (Markuli) is in front. The two behind are lifted with transform, so each header strip peeks above
+ * the card in front and no text sits over another picture. The 88px top padding is the room for the peeks.
+ */
+.hero-showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  position: relative;
+  margin: var(--space-8) 0 0;
+  padding: var(--tile-pad);
+  padding-top: 88px;
+  box-sizing: border-box;
+  list-style: none;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-tile);
+  background:
+    linear-gradient(135deg, var(--tint-violet), transparent 70%), var(--glass);
+  box-shadow: var(--shadow);
+}
+
+/* All three cards share one grid cell, so they stack. Each card scales from its top centre. */
+.hero-showcase-item {
+  grid-area: 1 / 1;
+  position: relative;
+  min-width: 0;
+  transform-origin: top center;
+  align-self: start;
+}
+
+.hero-showcase-item:nth-child(1) {
+  z-index: 3;
+}
+
+.hero-showcase-item:nth-child(2) {
+  z-index: 2;
+  transform: translateY(-44px) scale(0.95);
+}
+
+.hero-showcase-item:nth-child(3) {
+  z-index: 1;
+  transform: translateY(-88px) scale(0.9);
+}
+
+.hero-card {
+  display: block;
+  position: relative;
+  min-width: 0;
+  padding: 6px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-inner);
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.hero-card:hover,
+.hero-card:focus-visible {
+  box-shadow: 0 34px 60px -26px rgba(60, 30, 140, 0.75);
+}
+
+.hero-card:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.hero-card picture {
+  display: block;
+}
+
+/* No display here: the theme rules hide one of the two pictures with display, and must win. */
+.hero-card img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  vertical-align: top;
+  border-radius: calc(var(--radius-inner) - 6px);
+  background: #15112b;
+}
+
+/* The header strip: the project name in bold, the stack muted and smaller, on one row. */
+.hero-card-label {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-1);
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  line-height: 1.3;
+}
+
+.hero-card-name {
+  flex: none;
+  color: var(--fg);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.hero-card-stack {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--muted);
+}
+
+/* Motion only when allowed: the lift on hover and focus, and the fan's own settle. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-card {
+    transition: transform 0.35s var(--spring-settle);
+  }
+
+  .hero-card:hover,
+  .hero-card:focus-visible {
+    transform: translateY(-6px);
+  }
+}
+
 /* Section headings */
 .section-label {
   margin: 0 0 var(--space-3) var(--space-1);
@@ -612,8 +732,26 @@ h1 span {
   gap: var(--space-2);
 }
 
-.tabpanel[hidden] {
-  display: none;
+/* Once the script runs, all three panels share one grid cell, so the block is as tall
+   as its tallest panel and never jumps when the tab changes. Inactive panels are
+   faded out and made inert by the script. */
+.tabs-ready .tabpanel {
+  grid-area: 1 / 1;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.tabs-ready .tabpanel.is-active {
+  visibility: visible;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tabs-ready .tabpanel {
+    transition:
+      opacity 0.2s ease,
+      visibility 0.2s ease;
+  }
 }
 
 .panel-title {
@@ -680,35 +818,93 @@ h1 span {
 }
 
 .gallery-slide {
-  position: relative;
   flex: 0 0 100%;
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
   margin: 0;
-  overflow: hidden;
-  border-radius: var(--radius-inner);
-  background: #15112b;
   scroll-snap-align: start;
 }
 
+/* The whole frame of the Slide is shown, never cropped: the 8:5 box letterboxes anything else. */
 .gallery-image {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 16 / 10;
-  object-fit: cover;
+  aspect-ratio: 8 / 5;
+  object-fit: contain;
+  border-radius: var(--radius-inner);
+  background: #15112b;
 }
 
+/* The 8:5 frame letterboxes images that are a little taller (Mnemora's window captures).
+   The bands take each variant's own edge colour so they read as part of the picture. */
+.gallery-image.slide-dark {
+  background: #100e0b;
+}
+
+.gallery-image.slide-light {
+  background: #fbf9f5;
+}
+
+/*
+ * Theme-aware Slides. The light picture is hidden unless a Slide has one (has-light),
+ * and the dark picture hides only where its light twin is shown. display:none pictures are not fetched.
+ * Light is the default; dark applies under data-theme="dark" or system dark with no data-theme.
+ */
+.slide-light {
+  display: none;
+}
+
+.has-light .slide-light {
+  display: block;
+}
+
+.has-light .slide-dark {
+  display: none;
+}
+
+:root[data-theme="light"] .has-light .slide-light {
+  display: block;
+}
+
+:root[data-theme="light"] .has-light .slide-dark {
+  display: none;
+}
+
+:root[data-theme="dark"] .has-light .slide-light {
+  display: none;
+}
+
+:root[data-theme="dark"] .has-light .slide-dark {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .has-light .slide-light {
+    display: none;
+  }
+
+  :root:not([data-theme]) .has-light .slide-dark {
+    display: block;
+  }
+}
+
+/* The caption is a small label above its image. */
 .gallery-slide figcaption {
-  position: absolute;
-  left: var(--space-3);
-  bottom: var(--space-3);
-  max-width: calc(100% - 2 * var(--space-3));
-  padding: 6px 12px;
-  border-radius: var(--radius-pill);
-  background: rgba(15, 10, 35, 0.78);
-  color: #ffffff;
-  font-size: 0.78rem;
+  padding-inline: var(--space-3);
+  padding-top: var(--space-2);
+  color: var(--fg);
+  font-size: 0.8rem;
   font-weight: 600;
   line-height: 1.35;
+}
+
+.gallery-count {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .gallery-controls {
@@ -781,6 +977,7 @@ h1 span {
 .more-work {
   display: inline-flex;
   align-items: center;
+  gap: var(--space-2);
   min-height: var(--touch-target);
   margin: var(--space-1) 0 0 var(--space-1);
   font-weight: 700;
@@ -797,17 +994,37 @@ h1 span {
   gap: var(--space-2);
 }
 
-.links a {
+.button {
   display: inline-flex;
   align-items: center;
+  gap: var(--space-2);
   min-height: var(--touch-target);
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-pill);
-  background: var(--fg);
-  color: var(--fg-inverse);
   font-size: var(--text-sm);
   font-weight: 700;
   text-decoration: none;
+}
+
+/* Download: the same gradient as the Call to Action. */
+.button-primary {
+  background: var(--gradient-cta);
+  color: #ffffff;
+  box-shadow: 0 10px 30px -10px #6a45f0;
+}
+
+/* Source: a glass button with an edge, so it reads as secondary. */
+.button-glass {
+  border: 1px solid var(--edge);
+  background: var(--glass);
+  color: var(--fg);
+}
+
+.button-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
 }
 
 /* About: one glass panel, single column, with the Timeline inside. */
@@ -1177,6 +1394,15 @@ h1 span {
     min-height: 340px;
   }
 
+  /* Wide: the text takes the left column and the Showcase Stack the right, both centred. */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 55fr) minmax(0, 45fr);
+    align-items: center;
+    gap: var(--space-8);
+    min-width: 0;
+  }
+
   .project-block {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     align-items: center;
@@ -1186,6 +1412,13 @@ h1 span {
 
   .project-block > .gallery {
     order: 0;
+  }
+
+  /* The Facts run across the whole block on the second row, four across. */
+  .facts {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .project-block:nth-of-type(even) {
@@ -1207,7 +1440,7 @@ h1 span {
   .rise,
   .reveal,
   .cta,
-  .links a {
+  .button {
     animation: none;
     transition: none;
     transform: none;

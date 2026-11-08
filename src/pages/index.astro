@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import About from "../components/About.astro";
 import Contact from "../components/Contact.astro";
 import Dock from "../components/Dock.astro";
+import GithubIcon from "../components/GithubIcon.astro";
 import Hero from "../components/Hero.astro";
 import ProjectBlock from "../components/ProjectBlock.astro";
 import Ruler from "../components/Ruler.astro";
@@ -14,14 +15,14 @@ const projects = (await getCollection("projects")).sort(
 
 const tints: Record<string, "pink" | "violet" | "teal"> = {
   markuli: "pink",
-  Mnemora: "violet",
-  localAIWrapper: "teal",
+  mnemora: "violet",
+  localaiwrapper: "teal",
 };
 ---
 
 <BaseLayout>
   <main id="main">
-    <Hero />
+    <Hero projects={projects} />
     <section id="work" aria-labelledby="work-heading">
       <h2 id="work-heading" class="section-label">Selected work</h2>
       {
@@ -29,12 +30,15 @@ const tints: Record<string, "pink" | "violet" | "teal"> = {
           <ProjectBlock
             project={project}
             eager={index === 0}
-            tint={tints[project.data.name] ?? "violet"}
+            tint={tints[project.id] ?? "violet"}
             index={index}
           />
         ))
       }
-      <a class="more-work" href="https://github.com/khatrihemang07" target="_blank" rel="noopener">See more of my work on GitHub →</a>
+      <a class="more-work" href="https://github.com/khatrihemang07" target="_blank" rel="noopener">
+        <GithubIcon />
+        See more of my work on GitHub →
+      </a>
     </section>
     <About />
     <Contact />

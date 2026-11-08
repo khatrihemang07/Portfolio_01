@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from "astro:content";
 import Gallery from "./Gallery.astro";
+import GithubIcon from "./GithubIcon.astro";
 
 interface Props {
   project: CollectionEntry<"projects">;
@@ -24,6 +25,7 @@ const panelId = (key: string) => `panel-${project.id}-${key}`;
 <article id={`project-${project.id}`} class:list={["tile project-block reveal", `tint-${tint}`]} style={`--i: ${index}`}>
   <div class="project-text">
     <h3>{data.name}</h3>
+    <p class="stack">{data.stack}</p>
     <p class="pitch">{data.pitch}</p>
 
     <!-- Hidden until the script runs: without JavaScript all three panels are shown instead. -->
@@ -61,21 +63,23 @@ const panelId = (key: string) => `panel-${project.id}-${key}`;
       </div>
     </div>
 
-    <ul class="facts" aria-label={`${data.name} facts`}>
-      {data.facts.map((fact) => <li>{fact.text}</li>)}
-    </ul>
-    <p class="stack">{data.stack}</p>
     <p class="links">
       {
         data.download && (
-          <a href={data.download} target="_blank" rel="noopener">
+          <a href={data.download} target="_blank" rel="noopener" class="button button-primary">
             Download
           </a>
         )
       }
-      <a href={data.repo} target="_blank" rel="noopener">Source</a>
+      <a href={data.repo} target="_blank" rel="noopener" class="button button-glass">
+        <GithubIcon />
+        Source
+      </a>
     </p>
   </div>
+  <ul class="facts" aria-label={`${data.name} facts`}>
+    {data.facts.map((fact) => <li>{fact.text}</li>)}
+  </ul>
   <Gallery name={data.name} slides={data.slides} eager={eager} />
 </article>
 

@@ -10,6 +10,16 @@ interface Props {
 }
 
 const { name, slides, eager = false } = Astro.props;
+
+// The 8:5 frame and the letterbox colours assume a Slide's light and dark images are the same size.
+slides.forEach((slide, i) => {
+  const { dark, light } = slide.image;
+  if (light && (light.width !== dark.width || light.height !== dark.height)) {
+    throw new Error(
+      `${name}, Slide ${i + 1}: The light and dark images of a Slide must be the same size (dark ${dark.width}x${dark.height}, light ${light.width}x${light.height}).`,
+    );
+  }
+});
 ---
 
 <div class="gallery">
@@ -22,21 +32,41 @@ const { name, slides, eager = false } = Astro.props;
     data-gallery-track
   >
     {
-      slides.map((slide, i) => (
-        <figure class="gallery-slide" aria-label={`Slide ${i + 1} of ${slides.length}`}>
-          <Picture
-            src={slide.image}
-            alt={slide.alt}
-            formats={["avif", "webp"]}
-            widths={[480, 960, 1440]}
-            sizes="(min-width: 860px) 60vw, 100vw"
-            loading={eager && i === 0 ? "eager" : "lazy"}
-            fetchpriority={eager && i === 0 ? "high" : "auto"}
-            class="gallery-image"
-          />
-          <figcaption>{slide.caption}</figcaption>
-        </figure>
-      ))
+      slides.map((slide, i) => {
+        // A Slide with a light picture loads both lazily: the hidden one must not be fetched eagerly.
+        const hasLight = Boolean(slide.image.light);
+        const lead = eager && i === 0 && !hasLight;
+        return (
+          <figure
+            class:list={["gallery-slide", { "has-light": hasLight }]}
+            aria-label={`Slide ${i + 1} of ${slides.length}`}
+          >
+            <figcaption>{slide.caption}</figcaption>
+            <Picture
+              src={slide.image.dark}
+              alt={slide.alt}
+              formats={["avif", "webp"]}
+              widths={[480, 960, 1440]}
+              sizes="(min-width: 860px) 60vw, 100vw"
+              loading={lead ? "eager" : "lazy"}
+              fetchpriority={lead ? "high" : "auto"}
+              class="gallery-image slide-dark"
+            />
+            {slide.image.light && (
+              <Picture
+                src={slide.image.light}
+                alt={slide.alt}
+                formats={["avif", "webp"]}
+                widths={[480, 960, 1440]}
+                sizes="(min-width: 860px) 60vw, 100vw"
+                loading="lazy"
+                fetchpriority="auto"
+                class="gallery-image slide-light"
+              />
+            )}
+          </figure>
+        );
+      })
     }
   </div>
   <!-- Rendered hidden: the script shows them when there is more than one Slide. -->
@@ -48,6 +78,7 @@ const { name, slides, eager = false } = Astro.props;
         ))
       }
     </div>
+    <span class="gallery-count" data-gallery-count aria-hidden="true">1 / {slides.length}</span>
     <div class="gallery-arrows">
       <button type="button" class="gallery-arrow" data-gallery-prev aria-label="Previous slide">
         <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>

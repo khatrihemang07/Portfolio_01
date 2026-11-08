@@ -579,9 +579,9 @@ const builtJs = () =>
     ...[...page().matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(
       (match) => match[1],
     ),
-    ...[...page().matchAll(/<script[^>]*\ssrc="([^"]+)"[^>]*>/g)].map((match) =>
-      readFileSync(join(root, "dist", match[1]), "utf8"),
-    ),
+    ...[...page().matchAll(/<script[^>]*\ssrc="([^"]+)"[^>]*>/g)]
+      .filter((match) => !/^https?:/.test(match[1]))
+      .map((match) => readFileSync(join(root, "dist", match[1]), "utf8")),
   ].join("\n");
 
 describe("built full page: look, feel and content", () => {
@@ -914,8 +914,12 @@ describe("built full page: look, feel and content", () => {
       assert.ok(!page().includes(host), `found ${host} in the HTML`);
       assert.ok(!builtCss().includes(host), `found ${host} in the CSS`);
     }
+    // The Cloudflare Web Analytics beacon is the one allowed external script; its own test pins it.
     assert.doesNotMatch(
-      page(),
+      page().replace(
+        /<script\b[^>]*static\.cloudflareinsights\.com\/beacon\.min\.js[^>]*><\/script>/,
+        "",
+      ),
       /<(link|script|img|source)\b(?![^>]*rel="canonical")[^>]*\s(href|src|srcset)="https?:\/\//,
     );
     assert.doesNotMatch(builtCss(), /url\(\s*["']?https?:/);
@@ -1342,6 +1346,26 @@ describe("launch hardening: built release output", () => {
     ]) {
       assert.ok(existsSync(distPath(file)), `expected dist/${file}`);
     }
+  });
+
+  test("Cloudflare Web Analytics is the only third-party script: one external beacon from static.cloudflareinsights.com with the site token, after the page content", () => {
+    const html = page();
+    const external = [
+      ...html.matchAll(/<script\b[^>]*\ssrc="(https?:[^"]+)"[^>]*>/g),
+    ];
+    assert.equal(external.length, 1, "exactly one external script");
+    assert.equal(
+      external[0][1],
+      "https://static.cloudflareinsights.com/beacon.min.js",
+    );
+    assert.match(
+      external[0][0],
+      /data-cf-beacon="\{(&#34;|&quot;|")token(&#34;|&quot;|")\s*:\s*(&#34;|&quot;|")72eb759b6f134c5f8830e4e36cca40d8(&#34;|&quot;|")\}"/,
+    );
+    assert.ok(
+      html.indexOf("beacon.min.js") > html.indexOf('id="contact"'),
+      "the beacon comes after the page content",
+    );
   });
 
   test("index.html has exactly one canonical link to the home URL", () => {
@@ -2066,7 +2090,10 @@ describe("built Project Block layout, scrollbar and Gallery", () => {
     const moduleScripts = [
       ...page().matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g),
     ]
-      .filter(([, attrs]) => /type="module"/.test(attrs))
+      .filter(
+        ([, attrs]) =>
+          /type="module"/.test(attrs) && !/cloudflareinsights/.test(attrs),
+      )
       .map(([, attrs, body]) => {
         const src = attrs.match(/\ssrc="([^"]+)"/)?.[1];
         return src ? readFileSync(join(root, "dist", src), "utf8") : body;
@@ -2136,7 +2163,10 @@ describe("built Project Block structure, tabs, buttons, Facts strip and Gallery"
   };
   const bundledScript = () =>
     [...page().matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)]
-      .filter(([, attrs]) => /type="module"/.test(attrs))
+      .filter(
+        ([, attrs]) =>
+          /type="module"/.test(attrs) && !/cloudflareinsights/.test(attrs),
+      )
       .map(([, attrs, body]) => {
         const src = attrs.match(/\ssrc="([^"]+)"/)?.[1];
         return src ? readFileSync(join(root, "dist", src), "utf8") : body;

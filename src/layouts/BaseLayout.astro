@@ -77,5 +77,11 @@ const person = {
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <slot />
+    <!-- Cloudflare Web Analytics: cookie-free page views. The CSP in scripts/write-headers.mjs allows exactly this host. -->
+    <script
+      defer
+      type="module"
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "72eb759b6f134c5f8830e4e36cca40d8"}'></script>
   </body>
 </html>

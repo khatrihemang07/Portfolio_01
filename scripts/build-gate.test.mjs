@@ -944,7 +944,7 @@ describe("built navigation: Dock and Ruler", () => {
 });
 
 // Release output: metadata, 404, sitemap, robots, headers and the transfer budget.
-const SITE = "https://hemangkhatri.pages.dev";
+const SITE = "https://hemangkhatri.khatrihemang07.workers.dev";
 const distPath = (...parts) => join(root, "dist", ...parts);
 const readDist = (...parts) => readFileSync(distPath(...parts), "utf8");
 
@@ -1923,5 +1923,32 @@ describe("built Project Block layout, scrollbar and Gallery", () => {
     let outside = flat();
     for (const block of blocks) outside = outside.replace(block, "");
     assert.doesNotMatch(outside, /scroll-behavior:smooth/);
+  });
+});
+
+// Deployment: the Cloudflare Workers build must install and deploy this repo.
+describe("deployment config", () => {
+  const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+  const wranglerPath = join(root, "wrangler.jsonc");
+
+  test("package.json pins the pnpm version the lockfile and workspace file were made with", () => {
+    // Cloudflare's build image defaults to pnpm 9, which rejects pnpm-workspace.yaml
+    // (it has no `packages` list) and would ignore its overrides.
+    assert.match(pkg.packageManager ?? "", /^pnpm@\d+\.\d+\.\d+$/);
+    assert.ok(Number(pkg.packageManager.split("@")[1].split(".")[0]) >= 10);
+  });
+
+  test("wrangler.jsonc names the Worker, serves dist and answers unknown paths with the 404 page", () => {
+    assert.ok(existsSync(wranglerPath), "wrangler.jsonc is missing");
+    const text = readFileSync(wranglerPath, "utf8")
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//"))
+      .join("\n");
+    const config = JSON.parse(text);
+    assert.equal(config.name, "hemangkhatri");
+    assert.match(config.compatibility_date, /^\d{4}-\d{2}-\d{2}$/);
+    assert.equal(config.assets?.directory, "./dist");
+    assert.equal(config.assets?.not_found_handling, "404-page");
+    assert.equal(config.main, undefined, "static site: no Worker script");
   });
 });

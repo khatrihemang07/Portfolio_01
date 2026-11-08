@@ -1,6 +1,6 @@
 # Portfolio
 
-The personal site of Hemang Khatri: one static page with a Hero, the Work section (a Project Block with an image Gallery for each of Markuli, Mnemora and localAIWrapper), About and Contact. Built with Astro and hosted on Cloudflare (a Workers static-assets deployment) at https://hemangkhatri.khatrihemang07.workers.dev.
+The personal site of Hemang Khatri: one static page with a Hero, the Work section (a Project Block with an image Gallery for each of Markuli, Mnemora and localAIWrapper), About and Contact. Built with Astro and hosted on Cloudflare (a Workers static-assets deployment) at https://me.hemangkhatri.workers.dev.
 
 Terms (Site, Project Block, Gallery, Dock, Ruler and others) are defined in `GLOSSARY.md`.
 
@@ -18,15 +18,15 @@ Install with pnpm (see `.nvmrc` for the Node version).
 
 ## Cloudflare setup (one time)
 
-The site is a Cloudflare Workers project with static assets (`wrangler.jsonc`), named `hemangkhatri`, built from this repository by Workers Builds. Every push to `main` builds and deploys it.
+The site is a Cloudflare Workers project with static assets (`wrangler.jsonc`), named `me`, built from this repository by Workers Builds. Every push to `main` builds and deploys it.
 
-1. In the Cloudflare dashboard, create the Worker from the GitHub repository (Workers & Pages, Import a repository). The Worker name must be `hemangkhatri` to match `wrangler.jsonc`.
+1. In the Cloudflare dashboard, create the Worker from the GitHub repository (Workers & Pages, Import a repository). The Worker name must be `me` to match `wrangler.jsonc`.
 2. Build settings:
    - Build command: `pnpm run build`
    - Deploy command: `npx wrangler deploy`
    - Root directory: `/`
 3. Build variables (Settings, Build, Variables): set `PNPM_VERSION` to the version in `package.json` (`packageManager`, currently `11.20.0`). Cloudflare's build image defaults to pnpm 9, which cannot read this repo's `pnpm-workspace.yaml`. Node comes from `.nvmrc` (`22.23.4`).
-4. The live address is `https://hemangkhatri.khatrihemang07.workers.dev`. The same address is set as `site` in `astro.config.mjs` and in `public/robots.txt`; change all three together if a custom domain is added.
+4. The live address is `https://me.hemangkhatri.workers.dev`. The same address is set as `site` in `astro.config.mjs` and in `public/robots.txt`; change all three together if a custom domain is added.
 5. Analytics: open **Web Analytics** for the account and enable it. Cloudflare then injects its own beacon. The beacon is cookieless, so there is no consent banner. The code contains no analytics snippet or token on purpose. The Content-Security-Policy already allows the beacon hosts (`static.cloudflareinsights.com` and `cloudflareinsights.com`).
 
 ## Headers are generated at build time

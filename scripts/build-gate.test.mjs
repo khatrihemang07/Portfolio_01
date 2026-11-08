@@ -1048,7 +1048,7 @@ describe("built navigation: Dock and Ruler", () => {
 });
 
 // Release output: metadata, 404, sitemap, robots, headers and the transfer budget.
-const SITE = "https://hemangkhatri.khatrihemang07.workers.dev";
+const SITE = "https://me.hemangkhatri.workers.dev";
 const distPath = (...parts) => join(root, "dist", ...parts);
 const readDist = (...parts) => readFileSync(distPath(...parts), "utf8");
 
@@ -2347,7 +2347,7 @@ describe("deployment config", () => {
       .filter((line) => !line.trim().startsWith("//"))
       .join("\n");
     const config = JSON.parse(text);
-    assert.equal(config.name, "hemangkhatri");
+    assert.equal(config.name, "me");
     assert.match(config.compatibility_date, /^\d{4}-\d{2}-\d{2}$/);
     assert.equal(config.assets?.directory, "./dist");
     assert.equal(config.assets?.not_found_handling, "404-page");

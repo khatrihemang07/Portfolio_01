@@ -3,7 +3,7 @@
   // This is a static site: no Worker script, only the files in dist/ (including the
   // generated _headers file, which Workers static assets applies).
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "hemangkhatri",
+  "name": "me",
   "compatibility_date": "2026-11-01",
   // Explicit, so deploys do not warn: the live address is workers.dev, and no public
   // preview address is created for each version.

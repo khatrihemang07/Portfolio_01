@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://hemangkhatri.khatrihemang07.workers.dev/sitemap.xml
+Sitemap: https://me.hemangkhatri.workers.dev/sitemap.xml

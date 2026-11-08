@@ -17,9 +17,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const contentDir = join(root, "src", "content", "projects");
 const invalidFile = join(contentDir, "zz-gate-invalid.yaml");
 
-// Slides per Project. The lead is still capturing more real Slides, so one is enough for now.
-// TODO: raise MIN_SLIDES to 3 once every Project has its captured Slides (plan: 3 to 5).
-const MIN_SLIDES = 1;
+// Slides per Project: every Featured Project has at least 3 captured Slides, at most 5.
+const MIN_SLIDES = 3;
 const MAX_SLIDES = 5;
 
 // A valid Project entry, as text. Each invalid case swaps in one broken field.
@@ -31,7 +30,7 @@ const validProject = ({
     .map((n) => `  - text: "Fact ${n}"\n    source: "Gate source."\n`)
     .join(""),
   hood = 'hood: "Gate hood."\n',
-  slides = '  - image:\n      dark: ../../assets/projects/markuli.png\n    alt: "Gate alt text."\n    caption: "Gate caption."\n',
+  slides = '  - image:\n      dark: ../../assets/projects/markuli/finished-ink.png\n    alt: "Gate alt text."\n    caption: "Gate caption."\n',
   repo = "repo: https://github.com/example/gate\n",
 } = {}) =>
   `name: gate
@@ -41,7 +40,7 @@ ${repo}slides:
 ${slides}order: 99
 `;
 const gateSlide = (n) =>
-  `  - image:\n      dark: ../../assets/projects/markuli.png\n    alt: "Alt ${n}."\n    caption: "Caption ${n}."\n`;
+  `  - image:\n      dark: ../../assets/projects/markuli/finished-ink.png\n    alt: "Alt ${n}."\n    caption: "Caption ${n}."\n`;
 
 const invalidCases = [
   [
@@ -66,7 +65,7 @@ const invalidCases = [
     "a Slide with empty alt",
     validProject({
       slides:
-        '  - image:\n      dark: ../../assets/projects/markuli.png\n    alt: ""\n    caption: "Gate caption."\n',
+        '  - image:\n      dark: ../../assets/projects/markuli/finished-ink.png\n    alt: ""\n    caption: "Gate caption."\n',
     }),
     "slides.0.alt",
   ],
@@ -74,7 +73,7 @@ const invalidCases = [
     "a Slide with empty caption",
     validProject({
       slides:
-        '  - image:\n      dark: ../../assets/projects/markuli.png\n    alt: "Gate alt."\n    caption: ""\n',
+        '  - image:\n      dark: ../../assets/projects/markuli/finished-ink.png\n    alt: "Gate alt."\n    caption: ""\n',
     }),
     "slides.0.caption",
   ],
@@ -158,7 +157,7 @@ test("build fails when a Slide's light image is not the same size as its dark im
       invalidFile,
       validProject({
         slides:
-          '  - image:\n      dark: ../../assets/projects/markuli.png\n      light: ../../assets/projects/mnemora/home.png\n    alt: "Gate alt."\n    caption: "Gate caption."\n',
+          '  - image:\n      dark: ../../assets/projects/markuli/finished-ink.png\n      light: ../../assets/projects/mnemora/home.png\n    alt: "Gate alt."\n    caption: "Gate caption."\n',
       }),
     );
     const result = runBuild();
@@ -2369,8 +2368,8 @@ describe("deployment config", () => {
 // Kept last: this build leaves a temporary Project in dist/, which no later test reads.
 describe("theme-aware Slides: built HTML carries the light picture only where one exists", () => {
   const fixtureSlides = [
-    '  - image:\n      dark: ../../assets/projects/markuli.png\n      light: ../../assets/projects/markuli.png\n    alt: "Gate light alt."\n    caption: "Gate light caption."\n',
-    '  - image:\n      dark: ../../assets/projects/markuli.png\n    alt: "Gate dark alt."\n    caption: "Gate dark caption."\n',
+    '  - image:\n      dark: ../../assets/projects/markuli/finished-ink.png\n      light: ../../assets/projects/markuli/finished-ink.png\n    alt: "Gate light alt."\n    caption: "Gate light caption."\n',
+    '  - image:\n      dark: ../../assets/projects/markuli/finished-ink.png\n    alt: "Gate dark alt."\n    caption: "Gate dark caption."\n',
   ].join("");
   let html = "";
   let article = "";

@@ -24,7 +24,23 @@ repo: https://github.com/khatrihemang07/markuli
 download: https://github.com/khatrihemang07/markuli/releases/latest
 slides:
   - image:
-      dark: ../../assets/projects/markuli.png
-    alt: "Markuli's orange hand-drawn ink over a demo analytics dashboard: an ellipse around the tallest bar in a signups chart, with an arrow pointing at it."
+      dark: ../../assets/projects/markuli/pen-mid-stroke.png
+    alt: "Markuli drawing over a demo launch board: red, green, blue and purple marks already on the board, and an amber arrow half drawn, with the pen cursor at its tail and the Pen tool lit on the toolbar at the top."
+    caption: "Pen: ink follows your hand as you draw"
+  - image:
+      dark: ../../assets/projects/markuli/toolbar.png
+    alt: "The Markuli toolbar: Select, Pen, Eraser, Laser and Hand tools, five colours, three line widths and undo, redo and clear buttons, with the pointer over the Laser tool."
+    caption: "Toolbar: five tools, five colours, three widths"
+  - image:
+      dark: ../../assets/projects/markuli/colour-picker.png
+    alt: "The Color Picker open under the blue colour slot: a grid of greys, light and dark shades of each hue, with blue chosen."
+    caption: "Color Picker: right-click any colour to change it"
+  - image:
+      dark: ../../assets/projects/markuli/laser.png
+    alt: "The Laser tool in use: a red pointer dot with a short fading trail beside the Bug label on the demo board, and the toolbar colours dimmed because the Laser leaves no ink."
+    caption: "Laser: a fading pointer that leaves no ink"
+  - image:
+      dark: ../../assets/projects/markuli/finished-ink.png
+    alt: "Markuli's finished ink over the demo board: a red circle around 1,284, a green underline under Shipped, a blue OK with a check mark, a purple circle and underline, and an amber arrow pointing at the Audit log export card."
     caption: "The finished ink"
 order: 1

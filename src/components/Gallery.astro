@@ -5,11 +5,9 @@ import type { CollectionEntry } from "astro:content";
 interface Props {
   name: string;
   slides: CollectionEntry<"projects">["data"]["slides"];
-  // The very first Slide on the page is the likely LCP image: eager and high priority.
-  eager?: boolean;
 }
 
-const { name, slides, eager = false } = Astro.props;
+const { name, slides } = Astro.props;
 
 // Candidate widths and the width a Gallery really displays at (about 535px from 1240px up, about 46vw from 860px,
 // a phone's width less 80px of padding below that), so no browser fetches a larger file than the layout needs.
@@ -38,9 +36,8 @@ slides.forEach((slide, i) => {
   >
     {
       slides.map((slide, i) => {
-        // A Slide with a light picture loads both lazily: the hidden one must not be fetched eagerly.
+        // Every Slide loads lazily: the Hero's front card is the page's one eager image.
         const hasLight = Boolean(slide.image.light);
-        const lead = eager && i === 0 && !hasLight;
         return (
           <figure
             class:list={["gallery-slide", { "has-light": hasLight }]}
@@ -53,8 +50,8 @@ slides.forEach((slide, i) => {
               formats={["avif", "webp"]}
               widths={widths}
               sizes={sizes}
-              loading={lead ? "eager" : "lazy"}
-              fetchpriority={lead ? "high" : "auto"}
+              loading="lazy"
+              fetchpriority="auto"
               class="gallery-image slide-dark"
             />
             {slide.image.light && (

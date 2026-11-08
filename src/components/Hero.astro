@@ -9,7 +9,8 @@ interface Props {
 
 const { projects } = Astro.props;
 
-// Each card shows the first Slide of its Project: the Hero is not the LCP image, so every picture stays lazy.
+// Each card shows the first Slide of its Project. The front card (Markuli) is the page's LCP image, so it loads eagerly at high
+// priority; the cards behind it stay lazy. A card with a light picture stays lazy too: the hidden one must not be fetched eagerly.
 const showcase = projects.map((project) => {
   const [first] = project.data.slides;
   if (!first) throw new Error(`Project ${project.id} has no Slide for the Hero showcase`);
@@ -22,6 +23,7 @@ const showcase = projects.map((project) => {
     light: first.image.light,
   };
 });
+const leadId = showcase[0]?.light ? undefined : showcase[0]?.id;
 ---
 
 <header id="top" class="hero">
@@ -37,7 +39,9 @@ const showcase = projects.map((project) => {
   </div>
   <ul class="hero-showcase" role="list">
     {
-      showcase.map((card) => (
+      showcase.map((card) => {
+        const lead = card.id === leadId;
+        return (
         <li class="hero-showcase-item">
           <a
             class:list={["hero-card", { "has-light": card.light }]}
@@ -54,8 +58,8 @@ const showcase = projects.map((project) => {
               formats={["avif", "webp"]}
               widths={[480, 960]}
               sizes="(min-width: 860px) 36vw, 90vw"
-              loading="lazy"
-              fetchpriority="auto"
+              loading={lead ? "eager" : "lazy"}
+              fetchpriority={lead ? "high" : "auto"}
               class="slide-dark"
             />
             {card.light && (
@@ -72,7 +76,8 @@ const showcase = projects.map((project) => {
             )}
           </a>
         </li>
-      ))
+        );
+      })
     }
   </ul>
 </header>

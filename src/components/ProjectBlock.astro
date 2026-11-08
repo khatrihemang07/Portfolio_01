@@ -5,12 +5,11 @@ import GithubIcon from "./GithubIcon.astro";
 
 interface Props {
   project: CollectionEntry<"projects">;
-  eager?: boolean;
   tint?: "pink" | "violet" | "teal";
   index?: number;
 }
 
-const { project, eager = false, tint = "violet", index = 0 } = Astro.props;
+const { project, tint = "violet", index = 0 } = Astro.props;
 const { data } = project;
 
 const tabs = [
@@ -87,7 +86,7 @@ const panelId = (key: string) => `panel-${project.id}-${key}`;
     </div>
   </div>
 
-  <Gallery name={data.name} slides={data.slides} eager={eager} />
+  <Gallery name={data.name} slides={data.slides} />
 </article>
 
 <script>

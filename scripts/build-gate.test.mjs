@@ -501,19 +501,14 @@ describe("built Site with three Project Blocks", () => {
     }
   });
 
-  test("only the first Slide of the first Project is eager and high priority; every other image is lazy", () => {
+  test("every Gallery image is lazy: the Hero picture is the one above-the-fold image, so no Slide competes with it", () => {
     const imgs = [...html().matchAll(/<article[\s\S]*?<\/article>/g)].flatMap(
       (m) => m[0].match(/<img[^>]*>/g) ?? [],
     );
     assert.ok(imgs.length >= 3);
     imgs.forEach((img, i) => {
-      assert.equal(
-        attr(img, "loading"),
-        i === 0 ? "eager" : "lazy",
-        `img ${i}`,
-      );
-      if (i === 0) assert.equal(attr(img, "fetchpriority"), "high");
-      else assert.notEqual(attr(img, "fetchpriority"), "high");
+      assert.equal(attr(img, "loading"), "lazy", `img ${i}`);
+      assert.notEqual(attr(img, "fetchpriority"), "high", `img ${i}`);
     });
   });
 
@@ -2795,14 +2790,31 @@ describe("built Hero showcase: links to the Project Blocks, theme-aware pictures
     }
   });
 
-  test("no showcase image is eager or high priority: the Hero text is the LCP", () => {
+  test("the front showcase card is the Hero's LCP image: eager and high priority; the cards behind it, and any hidden light picture, stay lazy", () => {
+    const links = linksOrFail();
     // The localAIWrapper card also has a light picture, so there are at least three.
     assert.ok(imgsOf(showcase()).length >= 3, "expected the showcase pictures");
-    for (const img of imgsOf(showcase())) {
-      assert.notEqual(attrOf(img, "loading"), "eager", img);
-      assert.notEqual(attrOf(img, "fetchpriority"), "high", img);
-      assert.equal(attrOf(img, "loading"), "lazy", img);
-    }
+    links.forEach((link, i) => {
+      for (const img of imgsOf(link)) {
+        const hasLight = /\bhas-light\b/.test(
+          attrOf(link.match(/<a\b[^>]*>/)[0], "class") ?? "",
+        );
+        if (i === 0 && !hasLight) {
+          assert.equal(attrOf(img, "loading"), "eager", img);
+          assert.equal(attrOf(img, "fetchpriority"), "high", img);
+        } else {
+          assert.equal(attrOf(img, "loading"), "lazy", img);
+          assert.notEqual(attrOf(img, "fetchpriority"), "high", img);
+        }
+      }
+    });
+    assert.equal(
+      imgsOf(showcase()).filter(
+        (img) => attrOf(img, "fetchpriority") === "high",
+      ).length,
+      1,
+      "exactly one high-priority image in the Hero",
+    );
   });
 
   test("every showcase link has a slide-dark picture, and a slide-light one only inside a has-light link", () => {

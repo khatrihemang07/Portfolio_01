@@ -29,7 +29,6 @@ const tints: Record<string, "pink" | "violet" | "teal"> = {
         projects.map((project, index) => (
           <ProjectBlock
             project={project}
-            eager={index === 0}
             tint={tints[project.id] ?? "violet"}
             index={index}
           />

@@ -25,7 +25,7 @@ download: https://github.com/khatrihemang07/markuli/releases/latest
 slides:
   - image:
       dark: ../../assets/projects/markuli/pen-mid-stroke.png
-    alt: "Markuli drawing over a demo launch board: red, green, blue and purple marks already on the board, and an amber arrow half drawn, with the pen cursor at its tail and the Pen tool lit on the toolbar at the top."
+    alt: "Markuli drawing over a demo launch board covered in ink: circles, spirals, stars, waves and an X in red, amber, green, blue and purple, in thin, medium and bold lines, and an amber arrow half drawn with the pen cursor at its tail and the Pen tool lit on the toolbar."
     caption: "Pen: ink follows your hand as you draw"
   - image:
       dark: ../../assets/projects/markuli/toolbar.png
@@ -37,10 +37,10 @@ slides:
     caption: "Color Picker: right-click any colour to change it"
   - image:
       dark: ../../assets/projects/markuli/laser.png
-    alt: "The Laser tool in use: a red pointer dot with a short fading trail beside the Bug label on the demo board, and the toolbar colours dimmed because the Laser leaves no ink."
+    alt: "The Laser tool in use: a red pointer dot with a long red trail sweeping across the clean demo board and fading behind it, and the toolbar colours dimmed because the Laser leaves no ink."
     caption: "Laser: a fading pointer that leaves no ink"
   - image:
       dark: ../../assets/projects/markuli/finished-ink.png
-    alt: "Markuli's finished ink over the demo board: a red circle around 1,284, a green underline under Shipped, a blue OK with a check mark, a purple circle and underline, and an amber arrow pointing at the Audit log export card."
+    alt: "Markuli's finished ink over the demo board: a red circle around 1,284, a blue OK with a check mark, a bold blue ring round Faster search, a purple ring round Bug, green and purple waves and spirals, a red X, stars, and an amber arrow, in all five colours and three line widths."
     caption: "The finished ink"
 order: 1

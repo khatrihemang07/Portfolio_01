@@ -48,4 +48,4 @@ slides:
       light: ../../assets/projects/mnemora/light/settings.png
     alt: "Mnemora's Settings opened on Shortcuts: a list of keyboard shortcuts such as the command palette, go to Journal and go to Todo, with a section menu beside it for Appearance, General, Navigation, Data and storage, Modules and more."
     caption: "Settings: keyboard-first, with a shortcut for everything"
-order: 2
+order: 1

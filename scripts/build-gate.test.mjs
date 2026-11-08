@@ -293,27 +293,27 @@ describe("built Site with three Project Blocks", () => {
     assert.equal(html().match(/<article[\s>]/g)?.length, 3);
   });
 
-  test("Project Blocks are ordered Markuli, Mnemora, localAIWrapper", () => {
+  test("Project Blocks are ordered Mnemora, Markuli, localAIWrapper", () => {
     const names = articles().map(
       (article) => article.match(/<h3[^>]*>([^<]*)<\/h3>/)?.[1],
     );
-    assert.deepEqual(names, ["Markuli", "Mnemora", "localAIWrapper"]);
+    assert.deepEqual(names, ["Mnemora", "Markuli", "localAIWrapper"]);
   });
 
-  test("the first Project Block is Markuli, with the exact name and the pink tint", () => {
+  test("the first Project Block is Mnemora, with the exact name and the violet tint", () => {
     const [first] = articles();
     assert.equal(
       first.match(/<h3[^>]*>([^<]*)<\/h3>/)?.[1],
-      "Markuli",
+      "Mnemora",
       "first <h3>",
     );
-    assert.match(first.match(/<article[^>]*>/)[0], /\btint-pink\b/);
+    assert.match(first.match(/<article[^>]*>/)[0], /\btint-violet\b/);
   });
 
-  test("exactly 2 Download links, to the exact latest-release URLs of markuli and Mnemora", () => {
+  test("exactly 2 Download links, to the exact latest-release URLs of Mnemora and markuli", () => {
     assert.deepEqual(downloadLinks(), [
-      "https://github.com/khatrihemang07/markuli/releases/latest",
       "https://github.com/khatrihemang07/Mnemora_v1/releases/latest",
+      "https://github.com/khatrihemang07/markuli/releases/latest",
     ]);
   });
 
@@ -1018,8 +1018,8 @@ describe("built navigation: Dock and Ruler", () => {
     assert.deepEqual(hrefsOf(navOf("Ruler")), [
       "#top",
       "#work",
-      "#project-markuli",
       "#project-mnemora",
+      "#project-markuli",
       "#project-localaiwrapper",
       "#about",
       "#contact",
@@ -1043,8 +1043,8 @@ describe("built navigation: Dock and Ruler", () => {
   test("the top of the page is id top, and each Project Block article carries its project id", () => {
     assert.equal(idCount("top"), 1);
     assert.deepEqual(articleIds(), [
-      "project-markuli",
       "project-mnemora",
+      "project-markuli",
       "project-localaiwrapper",
     ]);
   });
@@ -2683,7 +2683,7 @@ describe("theme-aware Slides: built HTML carries the light picture only where on
 
 // Hero Showcase: three glass cards of the first Slide of each Featured Project, beside the Hero text.
 describe("built Hero showcase: links to the Project Blocks, theme-aware pictures and a two-column Hero", () => {
-  const SHOWCASE_ORDER = ["markuli", "mnemora", "localaiwrapper"];
+  const SHOWCASE_ORDER = ["mnemora", "markuli", "localaiwrapper"];
   // A fresh build: the fixture Project tests above leave a fourth Project in the shared build output.
   before(() => {
     const result = runBuild();
@@ -2744,7 +2744,7 @@ describe("built Hero showcase: links to the Project Blocks, theme-aware pictures
   });
 
   test("each showcase link has a non-empty aria-label that names its project", () => {
-    const names = ["Markuli", "Mnemora", "localAIWrapper"];
+    const names = ["Mnemora", "Markuli", "localAIWrapper"];
     linksOrFail().forEach((link, i) => {
       const label = attrOf(link.match(/<a\b[^>]*>/)[0], "aria-label") ?? "";
       assert.ok(label.trim().length > 0, `link ${i} has no aria-label`);
@@ -2790,16 +2790,12 @@ describe("built Hero showcase: links to the Project Blocks, theme-aware pictures
     }
   });
 
-  test("the front showcase card is the Hero's LCP image: eager and high priority; the cards behind it, and any hidden light picture, stay lazy", () => {
+  test("the front showcase card is the Hero's LCP image: all its pictures are eager and high priority (the hidden light one is a small price for no late pop-in); the cards behind it stay lazy", () => {
     const links = linksOrFail();
-    // The localAIWrapper card also has a light picture, so there are at least three.
     assert.ok(imgsOf(showcase()).length >= 3, "expected the showcase pictures");
     links.forEach((link, i) => {
       for (const img of imgsOf(link)) {
-        const hasLight = /\bhas-light\b/.test(
-          attrOf(link.match(/<a\b[^>]*>/)[0], "class") ?? "",
-        );
-        if (i === 0 && !hasLight) {
+        if (i === 0) {
           assert.equal(attrOf(img, "loading"), "eager", img);
           assert.equal(attrOf(img, "fetchpriority"), "high", img);
         } else {
@@ -2808,13 +2804,6 @@ describe("built Hero showcase: links to the Project Blocks, theme-aware pictures
         }
       }
     });
-    assert.equal(
-      imgsOf(showcase()).filter(
-        (img) => attrOf(img, "fetchpriority") === "high",
-      ).length,
-      1,
-      "exactly one high-priority image in the Hero",
-    );
   });
 
   test("every showcase link has a slide-dark picture, and a slide-light one only inside a has-light link", () => {
@@ -2869,7 +2858,7 @@ describe("built Hero showcase: links to the Project Blocks, theme-aware pictures
     assert.doesNotMatch(body, /background:var\(--glass\)/);
   });
 
-  test("the deck stacks the three cards with a z-index strictly decreasing in DOM order, the first (Markuli) in front", () => {
+  test("the deck stacks the three cards with a z-index strictly decreasing in DOM order, the first (Mnemora) in front", () => {
     const bodies = cssBodies(builtCss());
     // The minifier writes :nth-child(1) as :first-child, so both spellings count for the first card.
     const selectorsOf = (n) =>

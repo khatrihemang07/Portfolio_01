@@ -13,7 +13,7 @@ A piece of the owner's own work that is public and shown on the Site. Private or
 _Avoid_: Repo, app, case study
 
 **Featured Project**:
-A Project chosen to appear in the Work section. Currently Markuli, Mnemora and localAIWrapper.
+A Project chosen to appear in the Work section. Currently Mnemora, Markuli and localAIWrapper, in that order.
 _Avoid_: Highlight, top project
 
 **Project Block**:
@@ -49,7 +49,7 @@ A small quiet pill under the Hero's Call to Action stating one fact about the ow
 _Avoid_: Stat Tile, badge, counter, widget
 
 **Hero Showcase**:
-The deck of three cards in the right half of the Hero, one per Featured Project. Each card shows the project's name, its stack line and the first Slide's image, and links to that Project's Project Block. The Markuli card is in front.
+The deck of three cards in the right half of the Hero, one per Featured Project. Each card shows the project's name, its stack line and the first Slide's image, and links to that Project's Project Block. The first Featured Project's card (currently Mnemora) is in front.
 _Avoid_: Hero image, collage, carousel
 
 **Fact**:

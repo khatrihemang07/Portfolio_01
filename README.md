@@ -1,6 +1,6 @@
 # Portfolio
 
-The personal site of Hemang Khatri: one static page with a Hero, the Work section (a Project Block with an image Gallery for each of Markuli, Mnemora and localAIWrapper), About and Contact. Built with Astro and hosted on Cloudflare (a Workers static-assets deployment) at https://me.hemangkhatri.workers.dev.
+The personal site of Hemang Khatri: one static page with a Hero, the Work section (a Project Block with an image Gallery for each of Mnemora, Markuli and localAIWrapper), About and Contact. Built with Astro and hosted on Cloudflare (a Workers static-assets deployment) at https://me.hemangkhatri.workers.dev.
 
 Terms (Site, Project Block, Gallery, Dock, Ruler and others) are defined in `GLOSSARY.md`.
 

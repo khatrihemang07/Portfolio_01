@@ -16,9 +16,17 @@ _Avoid_: Repo, app, case study
 A Project chosen to appear in the Work section. Currently markuli, Mnemora and localAIWrapper.
 _Avoid_: Highlight, top project
 
-**Card**:
-The Work-section entry for one Featured Project, shown as a glass tile in the Site's mosaic layout: image, one-line pitch, two Facts, stack line, and links.
-_Avoid_: Panel, thumbnail
+**Project Block**:
+The Work-section entry for one Featured Project: a full-width glass block with the name, a one-line pitch, tabbed text (Story, Features, Under the hood), four Facts, links, and a Gallery. The Gallery sits on one side and swaps sides from one Project Block to the next.
+_Avoid_: Card, tile, panel, thumbnail
+
+**Gallery**:
+The swipeable row of Slides inside a Project Block, with previous and next buttons and dots.
+_Avoid_: Carousel, slider, lightbox
+
+**Slide**:
+One image in a Gallery together with its one-line caption. Each Project Block has one to five.
+_Avoid_: Screenshot, thumbnail, frame
 
 **Dock**:
 The floating navigation pill at the bottom of the Site, with a highlight that slides to the current section and a theme toggle. It is the only navigation on small screens.
@@ -29,7 +37,7 @@ The small label pill that appears above a Dock item on hover or keyboard focus, 
 _Avoid_: Popover, title attribute
 
 **Aurora**:
-The soft multicolour glow behind the whole Site, one fixed layer that never moves or animates. The Hero and Contact text sit directly on it; Cards are translucent glass over it.
+The soft multicolour glow behind the whole Site, one fixed layer that never moves or animates. The Hero and Contact text sit directly on it; Project Blocks and the About panel are translucent glass over it. The Site has no tile grid.
 _Avoid_: Background, gradient, mesh
 
 **Ruler**:
@@ -37,15 +45,15 @@ The slim row of ticks on the right edge of the Site, one per section and one per
 _Avoid_: Scrollbar, progress bar, side nav
 
 **Hero Chip**:
-A small quiet pill under the Hero's Call to Action stating one fact about the owner's work (the project count, the stack). It must never outweigh the name and intro. Replaces the earlier large Stat Tiles.
+A small quiet pill under the Hero's Call to Action stating one fact about the owner's work (the stack: Rust, Go, TS and AI). It must never outweigh the name and intro. Replaces the earlier large Stat Tiles.
 _Avoid_: Stat Tile, badge, counter, widget
 
 **Fact**:
-A concrete, checkable claim on a Card, such as a size or a measured resource use. Each Card has two.
+A concrete, checkable claim on a Project Block, such as a size or a measured resource use. Each Project Block has four.
 _Avoid_: Stat, metric, bullet
 
 **Showcase Image**:
-The picture on a Card, captured from the real Project running with demo data, never with the owner's real data.
+The picture in a Slide, captured from the real Project running with demo data, never with the owner's real data.
 _Avoid_: Screenshot, thumbnail, hero image
 
 **Demo Data**:

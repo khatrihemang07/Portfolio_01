@@ -1,10 +1,10 @@
 ---
 import { getCollection } from "astro:content";
 import About from "../components/About.astro";
-import Card from "../components/Card.astro";
 import Contact from "../components/Contact.astro";
 import Dock from "../components/Dock.astro";
 import Hero from "../components/Hero.astro";
+import ProjectBlock from "../components/ProjectBlock.astro";
 import Ruler from "../components/Ruler.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
@@ -21,22 +21,20 @@ const tints: Record<string, "pink" | "violet" | "teal"> = {
 
 <BaseLayout>
   <main id="main">
-    <Hero projectCount={projects.length} />
+    <Hero />
     <section id="work" aria-labelledby="work-heading">
       <h2 id="work-heading" class="section-label">Selected work</h2>
-      <div class="bento work-grid">
-        {
-          projects.map((project, index) => (
-            <Card
-              project={project}
-              eager={index === 0}
-              wide={index === 0}
-              tint={tints[project.data.name] ?? "violet"}
-              index={3 + index}
-            />
-          ))
-        }
-      </div>
+      {
+        projects.map((project, index) => (
+          <ProjectBlock
+            project={project}
+            eager={index === 0}
+            tint={tints[project.data.name] ?? "violet"}
+            index={index}
+          />
+        ))
+      }
+      <a class="more-work" href="https://github.com/khatrihemang07" target="_blank" rel="noopener">See more of my work on GitHub →</a>
     </section>
     <About />
     <Contact />

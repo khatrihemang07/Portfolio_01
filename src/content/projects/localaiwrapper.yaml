@@ -1,13 +1,41 @@
 name: localAIWrapper
 pitch: Your CLI, pretending to be an API.
-body: Point any OpenAI-compatible client at it. Each request runs one CLI process and returns a standard answer.
+story:
+  - "Point any OpenAI-compatible client at it and it answers like one. Behind the scenes each request starts one fresh CLI process, hands it your messages and returns the reply."
+  - "It is a small bridge for trying AI tools from code you already have. No state is kept between requests, so every turn starts clean."
+features:
+  - "POST /v1/chat/completions in OpenAI's format"
+  - "Three backends: claude, codex and commandcode"
+  - "Model discovery on /v1/models"
+  - "Tool calling rejected by default, optional emulation"
+  - "Local only by default (127.0.0.1), no authentication"
+  - "Configured with environment variables (PORT, WORKDIR_ROOTS, MAX_CONCURRENCY, TURN_TIMEOUT_MS)"
 facts:
-  - text: "One process per request, no state"
+  - text: "1 process per request"
     source: "Verified 2026-11-07: the code comment says every Turn spawns a full CLI process, CONTEXT.md says Turns share no state, and one real request was run through the claude backend."
+  - text: "Streaming and JSON-schema output"
+    source: "Verified 2026-11-08 by real runs against the server on 127.0.0.1: a request with stream true returned server-sent chunks ending in a stop reason and [DONE], and a request with a json_schema response_format returned a JSON object matching the schema (language and strength). Both are also documented in the README."
+  - text: "3 CLI backends"
+    source: "Verified 2026-11-08 in the localAIWrapper README (the claude, codex or commandcode CLI) and in src/backends/index.ts, which registers exactly claude, codex and commandcode."
   - text: "OpenAI chat-completions format"
     source: "Verified 2026-11-07 by a real run: the JSON reply has object chat.completion, choices[0].message with role and content, finish_reason, and a usage block."
+hood: "TypeScript on Bun. Every turn spawns a full CLI process with a timeout and a concurrency limit (PORT, WORKDIR_ROOTS, MAX_CONCURRENCY, TURN_TIMEOUT_MS)."
 stack: TypeScript · Bun
 repo: https://github.com/khatrihemang07/localAIWrapper
-image: ../../assets/projects/localaiwrapper.png
-alt: "A terminal showing a curl request to localAIWrapper and its OpenAI-style JSON reply to the question of why a mutex beats busy-waiting."
+slides:
+  - image: ../../assets/projects/localaiwrapper/slide1.png
+    alt: "A terminal window showing the command bun run start and the server's startup line: localAIWrapper listening on http://127.0.0.1:8080, with a maximum concurrency of 4 and a turn timeout of 600000 milliseconds."
+    caption: "Start it: one command, local address only"
+  - image: ../../assets/projects/localaiwrapper/slide2.png
+    alt: "A terminal window showing a curl request to the models endpoint and the model names it returns: claude-opus, claude-sonnet, claude-haiku, codex-sol, codex-terra and codex-luna."
+    caption: "Ask what's available: /v1/models"
+  - image: ../../assets/projects/localaiwrapper/slide3.png
+    alt: "A terminal window showing a curl request to the chat completions endpoint asking for a two-sentence explanation of an embedding, and the OpenAI-style JSON reply with the explanation, a stop reason and token usage."
+    caption: "One request, one OpenAI-style reply"
+  - image: ../../assets/projects/localaiwrapper/slide4.png
+    alt: "A terminal window showing a streaming curl request that counts from 1 to 5, and the reply arriving as a series of data chunks that end with a stop reason and the marker DONE."
+    caption: "Streaming works too, chunk by chunk"
+  - image: ../../assets/projects/localaiwrapper/slide5.png
+    alt: "A terminal window showing a request that asks for a JSON schema with a language and a strength, and the reply: a JSON object naming Rust and its memory-safety strength."
+    caption: "Structured output from a JSON schema"
 order: 3

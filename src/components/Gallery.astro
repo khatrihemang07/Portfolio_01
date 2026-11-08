@@ -1,0 +1,60 @@
+---
+import { Picture } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  name: string;
+  slides: CollectionEntry<"projects">["data"]["slides"];
+  // The very first Slide on the page is the likely LCP image: eager and high priority.
+  eager?: boolean;
+}
+
+const { name, slides, eager = false } = Astro.props;
+---
+
+<div class="gallery">
+  <div
+    class="gallery-track"
+    role="region"
+    aria-roledescription="carousel"
+    aria-label={`${name} screenshots`}
+    tabindex="0"
+    data-gallery-track
+  >
+    {
+      slides.map((slide, i) => (
+        <figure class="gallery-slide" aria-label={`Slide ${i + 1} of ${slides.length}`}>
+          <Picture
+            src={slide.image}
+            alt={slide.alt}
+            formats={["avif", "webp"]}
+            widths={[480, 960, 1440]}
+            sizes="(min-width: 860px) 60vw, 100vw"
+            loading={eager && i === 0 ? "eager" : "lazy"}
+            fetchpriority={eager && i === 0 ? "high" : "auto"}
+            class="gallery-image"
+          />
+          <figcaption>{slide.caption}</figcaption>
+        </figure>
+      ))
+    }
+  </div>
+  <!-- Rendered hidden: the script shows them when there is more than one Slide. -->
+  <div class="gallery-controls" data-gallery-controls hidden>
+    <div class="gallery-dots">
+      {
+        slides.map((_, i) => (
+          <button type="button" class="gallery-dot" data-gallery-dot aria-label={`Go to slide ${i + 1}`} aria-current={i === 0 ? "true" : undefined}></button>
+        ))
+      }
+    </div>
+    <div class="gallery-arrows">
+      <button type="button" class="gallery-arrow" data-gallery-prev aria-label="Previous slide">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
+      </button>
+      <button type="button" class="gallery-arrow" data-gallery-next aria-label="Next slide">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
+      </button>
+    </div>
+  </div>
+</div>

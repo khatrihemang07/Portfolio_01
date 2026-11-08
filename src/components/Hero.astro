@@ -1,21 +1,11 @@
----
-interface Props {
-  // How many Featured Projects are shown, so the Hero Chip always matches the Work section.
-  projectCount: number;
-}
-
-const { projectCount } = Astro.props;
----
-
-<header id="top" class="hero bento">
+<header id="top" class="hero">
   <div class="hero-intro rise" style="--i: 0">
     <h1>Hemang <span>Khatri</span></h1>
     <div>
-      <p class="lede">I build fast, small tools: native apps and the backends behind them. Backend engineer by day, Rust tinkerer by night.</p>
+      <p class="lede">I build AI tools, and I want to understand every layer under them: the model, the code and the machine it all runs on.</p>
       <a class="cta" href="#contact">Available for work and projects</a>
       <ul class="hero-chips" role="list">
-        <li class="hero-chip">{projectCount} public {projectCount === 1 ? "project" : "projects"}</li>
-        <li class="hero-chip">Rust · Go · TS</li>
+        <li class="hero-chip">Rust · Go · TS · AI</li>
       </ul>
     </div>
   </div>

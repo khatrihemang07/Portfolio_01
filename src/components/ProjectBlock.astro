@@ -1,0 +1,84 @@
+---
+import type { CollectionEntry } from "astro:content";
+import Gallery from "./Gallery.astro";
+
+interface Props {
+  project: CollectionEntry<"projects">;
+  eager?: boolean;
+  tint?: "pink" | "violet" | "teal";
+  index?: number;
+}
+
+const { project, eager = false, tint = "violet", index = 0 } = Astro.props;
+const { data } = project;
+
+const tabs = [
+  { key: "story", label: "Story" },
+  { key: "features", label: "Features" },
+  { key: "hood", label: "Under the hood" },
+];
+const tabId = (key: string) => `tab-${project.id}-${key}`;
+const panelId = (key: string) => `panel-${project.id}-${key}`;
+---
+
+<article id={`project-${project.id}`} class:list={["tile project-block reveal", `tint-${tint}`]} style={`--i: ${index}`}>
+  <div class="project-text">
+    <h3>{data.name}</h3>
+    <p class="pitch">{data.pitch}</p>
+
+    <!-- Hidden until the script runs: without JavaScript all three panels are shown instead. -->
+    <div class="tabs" role="tablist" aria-label={`${data.name} details`} hidden>
+      {
+        tabs.map((tab, i) => (
+          <button
+            type="button"
+            class="tab"
+            role="tab"
+            id={tabId(tab.key)}
+            aria-controls={panelId(tab.key)}
+            aria-selected={i === 0 ? "true" : "false"}
+            tabindex={i === 0 ? "0" : "-1"}
+          >
+            {tab.label}
+          </button>
+        ))
+      }
+    </div>
+    <div class="tab-panels">
+      <div class="tabpanel" role="tabpanel" tabindex="0" id={panelId("story")} aria-labelledby={tabId("story")}>
+        <h4 class="panel-title">Story</h4>
+        {data.story.map((paragraph) => <p>{paragraph}</p>)}
+      </div>
+      <div class="tabpanel" role="tabpanel" tabindex="0" id={panelId("features")} aria-labelledby={tabId("features")}>
+        <h4 class="panel-title">Features</h4>
+        <ul class="features">
+          {data.features.map((feature) => <li>{feature}</li>)}
+        </ul>
+      </div>
+      <div class="tabpanel" role="tabpanel" tabindex="0" id={panelId("hood")} aria-labelledby={tabId("hood")}>
+        <h4 class="panel-title">Under the hood</h4>
+        <p class="hood">{data.hood}</p>
+      </div>
+    </div>
+
+    <ul class="facts" aria-label={`${data.name} facts`}>
+      {data.facts.map((fact) => <li>{fact.text}</li>)}
+    </ul>
+    <p class="stack">{data.stack}</p>
+    <p class="links">
+      {
+        data.download && (
+          <a href={data.download} target="_blank" rel="noopener">
+            Download
+          </a>
+        )
+      }
+      <a href={data.repo} target="_blank" rel="noopener">Source</a>
+    </p>
+  </div>
+  <Gallery name={data.name} slides={data.slides} eager={eager} />
+</article>
+
+<script>
+  import "../scripts/project-block";
+</script>

@@ -1,8 +1,8 @@
 # Portfolio
 
-The personal site of Hemang Khatri: one static page with a Hero, the Work section (Cards for markuli, Mnemora and localAIWrapper), About and Contact. Built with Astro and hosted on Cloudflare Pages at https://hemangkhatri.pages.dev.
+The personal site of Hemang Khatri: one static page with a Hero, the Work section (a Project Block with an image Gallery for each of markuli, Mnemora and localAIWrapper), About and Contact. Built with Astro and hosted on Cloudflare Pages at https://hemangkhatri.pages.dev.
 
-Terms (Site, Card, Dock, Ruler and others) are defined in `GLOSSARY.md`.
+Terms (Site, Project Block, Gallery, Dock, Ruler and others) are defined in `GLOSSARY.md`.
 
 ## Commands
 
@@ -43,7 +43,7 @@ Inline `style="..."` attributes are allowed by `style-src-attr 'unsafe-inline'`.
 Run `pnpm verify`, then check the preview URL before merging to `main`.
 
 - [ ] `pnpm verify` passes on the branch
-- [ ] Every Fact has its recorded source checked, and the Showcase Images are the real app with Demo Data
+- [ ] Every Fact (four per Project Block) has its recorded source checked, and the Showcase Images in each Gallery are the real app with Demo Data
 - [ ] `pnpm check:links` has no failures (warnings from github.com are rate limits and are acceptable)
 - [ ] Keyboard only: skip link, Dock, Ruler, theme toggle, copy button and every link reach focus with a visible ring
 - [ ] Both themes: light and dark, from the system and from the toggle

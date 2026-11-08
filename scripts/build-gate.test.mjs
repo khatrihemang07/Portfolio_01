@@ -17,114 +17,116 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const contentDir = join(root, "src", "content", "projects");
 const invalidFile = join(contentDir, "zz-gate-invalid.yaml");
 
+// Slides per Project. The lead is still capturing more real Slides, so one is enough for now.
+// TODO: raise MIN_SLIDES to 3 once every Project has its captured Slides (plan: 3 to 5).
+const MIN_SLIDES = 1;
+const MAX_SLIDES = 5;
+
+// A valid Project entry, as text. Each invalid case swaps in one broken field.
+const validProject = ({
+  pitch = "pitch: Gate pitch.\n",
+  story = 'story:\n  - "Gate story."\n',
+  features = 'features:\n  - "One"\n  - "Two"\n  - "Three"\n',
+  facts = [1, 2, 3, 4]
+    .map((n) => `  - text: "Fact ${n}"\n    source: "Gate source."\n`)
+    .join(""),
+  hood = 'hood: "Gate hood."\n',
+  slides = '  - image: ../../assets/projects/markuli.png\n    alt: "Gate alt text."\n    caption: "Gate caption."\n',
+  repo = "repo: https://github.com/example/gate\n",
+} = {}) =>
+  `name: gate
+${pitch}${story}${features}facts:
+${facts}${hood}stack: Gate stack
+${repo}slides:
+${slides}order: 99
+`;
+const gateSlide = (n) =>
+  `  - image: ../../assets/projects/markuli.png\n    alt: "Alt ${n}."\n    caption: "Caption ${n}."\n`;
+
 const invalidCases = [
   [
-    "only one Fact",
-    `name: gate
-pitch: Gate pitch.
-body: Gate body.
-facts:
-  - text: "Only fact"
-    source: "Gate source."
-stack: Gate stack
-repo: https://github.com/example/gate
-image: ../../assets/projects/markuli.png
-alt: "Gate alt text."
-order: 99
-`,
+    "only three Facts",
+    validProject({
+      facts: [1, 2, 3]
+        .map((n) => `  - text: "Fact ${n}"\n    source: "Gate source."\n`)
+        .join(""),
+    }),
     "facts",
   ],
   [
-    "three Facts",
-    `name: gate
-pitch: Gate pitch.
-body: Gate body.
-facts:
-  - text: "First fact"
-    source: "Gate source."
-  - text: "Second fact"
-    source: "Gate source."
-  - text: "Third fact"
-    source: "Gate source."
-stack: Gate stack
-repo: https://github.com/example/gate
-image: ../../assets/projects/markuli.png
-alt: "Gate alt text."
-order: 99
-`,
+    "five Facts",
+    validProject({
+      facts: [1, 2, 3, 4, 5]
+        .map((n) => `  - text: "Fact ${n}"\n    source: "Gate source."\n`)
+        .join(""),
+    }),
     "facts",
   ],
   [
-    "empty alt",
-    `name: gate
-pitch: Gate pitch.
-body: Gate body.
-facts:
-  - text: "First fact"
-    source: "Gate source."
-  - text: "Second fact"
-    source: "Gate source."
-stack: Gate stack
-repo: https://github.com/example/gate
-image: ../../assets/projects/markuli.png
-alt: ""
-order: 99
-`,
-    "alt",
+    "a Slide with empty alt",
+    validProject({
+      slides:
+        '  - image: ../../assets/projects/markuli.png\n    alt: ""\n    caption: "Gate caption."\n',
+    }),
+    "slides.0.alt",
   ],
   [
-    "missing pitch",
-    `name: gate
-body: Gate body.
-facts:
-  - text: "First fact"
-    source: "Gate source."
-  - text: "Second fact"
-    source: "Gate source."
-stack: Gate stack
-repo: https://github.com/example/gate
-image: ../../assets/projects/markuli.png
-alt: "Gate alt text."
-order: 99
-`,
-    "pitch",
+    "a Slide with empty caption",
+    validProject({
+      slides:
+        '  - image: ../../assets/projects/markuli.png\n    alt: "Gate alt."\n    caption: ""\n',
+    }),
+    "slides.0.caption",
   ],
+  ["no Slides", validProject({ slides: "  []\n" }), "slides"],
+  [
+    "six Slides",
+    validProject({ slides: [1, 2, 3, 4, 5, 6].map(gateSlide).join("") }),
+    "slides",
+  ],
+  ["an empty story", validProject({ story: "story: []\n" }), "story"],
+  [
+    "a blank story paragraph",
+    validProject({ story: 'story:\n  - ""\n' }),
+    "story.0",
+  ],
+  [
+    "only two features",
+    validProject({ features: 'features:\n  - "One"\n  - "Two"\n' }),
+    "features",
+  ],
+  ["a missing hood", validProject({ hood: "" }), "hood"],
+  ["missing pitch", validProject({ pitch: "" }), "pitch"],
   [
     "a Fact with a missing source",
-    `name: gate
-pitch: Gate pitch.
-body: Gate body.
-facts:
-  - text: "First fact"
-  - text: "Second fact"
-    source: "Gate source."
-stack: Gate stack
-repo: https://github.com/example/gate
-image: ../../assets/projects/markuli.png
-alt: "Gate alt text."
-order: 99
-`,
+    validProject({
+      facts: `  - text: "Fact 1"\n  - text: "Fact 2"\n    source: "s"\n  - text: "Fact 3"\n    source: "s"\n  - text: "Fact 4"\n    source: "s"\n`,
+    }),
     "facts.0.source",
   ],
-  [
-    "an invalid repo URL",
-    `name: gate
-pitch: Gate pitch.
-body: Gate body.
-facts:
-  - text: "First fact"
-    source: "Gate source."
-  - text: "Second fact"
-    source: "Gate source."
-stack: Gate stack
-repo: not a url
-image: ../../assets/projects/markuli.png
-alt: "Gate alt text."
-order: 99
-`,
-    "repo",
-  ],
+  ["an invalid repo URL", validProject({ repo: "repo: not a url\n" }), "repo"],
 ];
+
+test("a Project with the maximum number of Slides is accepted by the schema", () => {
+  try {
+    writeFileSync(
+      invalidFile,
+      validProject({
+        slides: Array.from({ length: MAX_SLIDES }, (_, i) =>
+          gateSlide(i + 1),
+        ).join(""),
+      }),
+    );
+    const result = runBuild();
+    assert.equal(
+      result.status,
+      0,
+      `five Slides must be valid\n${result.stdout}\n${result.stderr}`,
+    );
+  } finally {
+    rmSync(invalidFile, { force: true });
+  }
+});
 
 // Always remove the temporary invalid Project, even if the run is interrupted.
 for (const signal of ["SIGINT", "SIGTERM"]) {
@@ -166,7 +168,7 @@ test("no Showcase Image alt text is still a placeholder", () => {
     const text = readFileSync(join(contentDir, file), "utf8");
     assert.doesNotMatch(
       text,
-      /^alt:\s*"?placeholder/im,
+      /^\s*(?:-\s+)?alt:\s*"?placeholder/im,
       `${file} still has a placeholder alt text`,
     );
   }
@@ -200,7 +202,7 @@ for (const [label, yaml, field] of invalidCases) {
   });
 }
 
-test("build succeeds with only the real markuli entry and renders its Card", () => {
+test("build succeeds with the real Projects and renders markuli's Project Block", () => {
   const result = buildOnce();
   assert.equal(
     result.status,
@@ -209,9 +211,9 @@ test("build succeeds with only the real markuli entry and renders its Card", () 
   );
 
   const html = readFileSync(join(root, "dist", "index.html"), "utf8");
-  assert.ok(html.includes("Hemang Khatri"), "expected the name tile");
-  assert.ok(html.includes("markuli"), "expected the markuli Card");
-  assert.ok(html.includes("<article"), "expected an article Card");
+  assert.ok(html.includes("Hemang Khatri"), "expected the name");
+  assert.ok(html.includes("markuli"), "expected the markuli Project Block");
+  assert.ok(html.includes("<article"), "expected an article Project Block");
   assert.ok(
     html.includes(
       'href="https://github.com/khatrihemang07/markuli/releases/latest"',
@@ -224,7 +226,28 @@ test("build succeeds with only the real markuli entry and renders its Card", () 
   );
 });
 
-describe("built Site with three Cards", () => {
+const FACTS = {
+  markuli: [
+    "1.6 MB download",
+    "11 MB idle RAM (Draw Mode off)",
+    "0% idle CPU",
+    "5 tools · 5 colours · 3 widths",
+  ],
+  Mnemora: [
+    "Mac + Android",
+    "1 SQLite file holds everything",
+    "6.4 MB Mac download",
+    "Journal and Todo work offline, no account",
+  ],
+  localAIWrapper: [
+    "1 process per request",
+    "Streaming and JSON-schema output",
+    "3 CLI backends",
+    "OpenAI chat-completions format",
+  ],
+};
+
+describe("built Site with three Project Blocks", () => {
   before(() => {
     const result = buildOnce();
     assert.equal(
@@ -236,26 +259,24 @@ describe("built Site with three Cards", () => {
 
   const html = () => readFileSync(join(root, "dist", "index.html"), "utf8");
   const articles = () => html().match(/<article[\s\S]*?<\/article>/g) ?? [];
-  const cardOf = (name) =>
-    articles().find((article) => article.includes(`<h3>${name}</h3>`)) ?? "";
+  const blockOf = (name) =>
+    articles().find((article) => article.includes(`>${name}</h3>`)) ?? "";
   const downloadLinks = () =>
     [
       ...html().matchAll(/<a [^>]*href="([^"]+)"[^>]*>\s*Download\s*<\/a>/g),
     ].map((match) => match[1]);
+  const attr = (tag, name) =>
+    tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1];
 
-  test("exactly 3 article Cards", () => {
+  test("exactly 3 article Project Blocks", () => {
     assert.equal(html().match(/<article[\s>]/g)?.length, 3);
   });
 
-  test("Cards are ordered markuli, Mnemora, localAIWrapper", () => {
-    const page = html();
-    const at = (name) => page.indexOf(`<h3>${name}</h3>`);
-    assert.ok(at("markuli") > -1, "expected a markuli Card");
-    assert.ok(at("Mnemora") > at("markuli"), "expected Mnemora after markuli");
-    assert.ok(
-      at("localAIWrapper") > at("Mnemora"),
-      "expected localAIWrapper after Mnemora",
+  test("Project Blocks are ordered markuli, Mnemora, localAIWrapper", () => {
+    const names = articles().map(
+      (article) => article.match(/<h3[^>]*>([^<]*)<\/h3>/)?.[1],
     );
+    assert.deepEqual(names, ["markuli", "Mnemora", "localAIWrapper"]);
   });
 
   test("exactly 2 Download links, to the exact latest-release URLs of markuli and Mnemora", () => {
@@ -266,54 +287,216 @@ describe("built Site with three Cards", () => {
   });
 
   test("localAIWrapper has no Download link", () => {
-    assert.doesNotMatch(cardOf("localAIWrapper"), />\s*Download\s*</);
+    assert.doesNotMatch(blockOf("localAIWrapper"), />\s*Download\s*</);
   });
 
   test("every target=_blank link also has rel=noopener", () => {
     const blankLinks = html().match(/<a [^>]*target="_blank"[^>]*>/g) ?? [];
     assert.equal(
       blankLinks.length,
-      6,
-      "expected 3 Source, 2 Download and the GitHub link",
+      7,
+      "expected 3 Source, 2 Download, the Contact GitHub link and the See more link",
     );
     for (const link of blankLinks) {
       assert.match(link, /rel="noopener"/, `missing rel="noopener": ${link}`);
     }
   });
 
-  test("each Card has exactly one img", () => {
-    for (const article of articles()) {
-      assert.equal(article.match(/<img[\s>]/g)?.length, 1);
+  test("each Project Block has a tablist of Story, Features and Under the hood tabs", () => {
+    for (const name of Object.keys(FACTS)) {
+      const block = blockOf(name);
+      assert.match(block, /<[a-z]+[^>]*role="tablist"/, `${name}: no tablist`);
+      const tabs =
+        block.match(/<button[^>]*role="tab"[^>]*>[\s\S]*?<\/button>/g) ?? [];
+      assert.deepEqual(
+        tabs.map(textOf),
+        ["Story", "Features", "Under the hood"],
+        `${name}: tabs`,
+      );
     }
   });
 
-  test("each Card's picture offers AVIF and WebP at 480w, 960w and 1440w", () => {
-    for (const article of articles()) {
-      for (const type of ["image/avif", "image/webp"]) {
-        const source = article
-          .match(/<source[^>]*>/g)
-          ?.find((tag) => tag.includes(`type="${type}"`));
-        assert.ok(source, `expected a ${type} source in a Card`);
-        for (const width of ["480w", "960w", "1440w"]) {
-          assert.match(
-            source,
-            new RegExp(`\\s${width}[,"]`),
-            `${type} is missing ${width}`,
+  test("tabs and tabpanels are wired with aria-controls and aria-labelledby, with the first tab the only one in the tab order", () => {
+    const allIds = [...html().matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
+    for (const name of Object.keys(FACTS)) {
+      const block = blockOf(name);
+      const tabs = block.match(/<button[^>]*role="tab"[^>]*>/g) ?? [];
+      const panels = block.match(/<[a-z]+[^>]*role="tabpanel"[^>]*>/g) ?? [];
+      assert.equal(tabs.length, 3, `${name}: tabs`);
+      assert.equal(panels.length, 3, `${name}: tabpanels`);
+      tabs.forEach((tab, i) => {
+        const panel = panels[i];
+        assert.equal(
+          attr(tab, "aria-controls"),
+          attr(panel, "id"),
+          `${name}: tab ${i} controls its panel`,
+        );
+        assert.equal(
+          attr(panel, "aria-labelledby"),
+          attr(tab, "id"),
+          `${name}: panel ${i} is labelled by its tab`,
+        );
+        assert.equal(attr(tab, "aria-selected"), i === 0 ? "true" : "false");
+        assert.equal(
+          attr(tab, "tabindex"),
+          i === 0 ? "0" : "-1",
+          "roving tabindex",
+        );
+        for (const id of [attr(tab, "id"), attr(panel, "id")]) {
+          assert.equal(
+            allIds.filter((x) => x === id).length,
+            1,
+            `id ${id} is unique`,
           );
+        }
+      });
+    }
+  });
+
+  test("without JavaScript every tab panel is visible", () => {
+    for (const name of Object.keys(FACTS)) {
+      const panels =
+        blockOf(name).match(/<[a-z]+[^>]*role="tabpanel"[^>]*>/g) ?? [];
+      assert.equal(panels.length, 3);
+      for (const panel of panels) {
+        assert.doesNotMatch(
+          panel,
+          /\shidden[\s>=]/,
+          `${name}: panel hidden in HTML`,
+        );
+      }
+    }
+  });
+
+  test("each Project Block lists exactly its four approved Facts", () => {
+    for (const [name, facts] of Object.entries(FACTS)) {
+      const list =
+        blockOf(name).match(/<ul[^>]*class="facts"[\s\S]*?<\/ul>/)?.[0] ?? "";
+      const items = [...list.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/g)].map((m) =>
+        textOf(m[1]),
+      );
+      assert.deepEqual(items, facts, `${name}: Facts`);
+    }
+  });
+
+  test("every tab panel is keyboard reachable, so screen-reader users can get into it", () => {
+    for (const name of Object.keys(FACTS)) {
+      const panels =
+        blockOf(name).match(/<div[^>]*role="tabpanel"[^>]*>/g) ?? [];
+      assert.equal(panels.length, 3, `${name}: tab panels`);
+      for (const panel of panels)
+        assert.match(panel, /tabindex="0"/, `${name}: ${panel}`);
+    }
+  });
+
+  test("a Slide never carries an ARIA role that is invalid on its element (Lighthouse aria-allowed-role)", () => {
+    // <figure role="group"> is not allowed; the carousel region already names the set.
+    for (const name of Object.keys(FACTS)) {
+      for (const figure of blockOf(name).match(/<figure\b[^>]*>/g) ?? []) {
+        assert.ok(!/\brole=/.test(figure), `${name}: ${figure}`);
+        assert.ok(!/aria-roledescription/.test(figure), `${name}: ${figure}`);
+      }
+    }
+  });
+
+  test(`each Project Block has ${MIN_SLIDES} to ${MAX_SLIDES} Slides, each with an image, non-empty alt and a non-empty caption`, () => {
+    for (const name of Object.keys(FACTS)) {
+      const figures = blockOf(name).match(/<figure[\s\S]*?<\/figure>/g) ?? [];
+      assert.ok(
+        figures.length >= MIN_SLIDES && figures.length <= MAX_SLIDES,
+        `${name}: ${figures.length} Slides`,
+      );
+      for (const figure of figures) {
+        const img = figure.match(/<img[^>]*>/)?.[0] ?? "";
+        assert.ok(img, `${name}: Slide has no img`);
+        assert.ok(
+          (attr(img, "alt") ?? "").trim().length > 0,
+          `${name}: empty alt`,
+        );
+        assert.ok(
+          attr(img, "width") && attr(img, "height"),
+          `${name}: img lacks dimensions`,
+        );
+        const caption =
+          figure.match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/)?.[1] ?? "";
+        assert.ok(textOf(caption).length > 0, `${name}: empty figcaption`);
+      }
+    }
+  });
+
+  test("each Gallery is a labelled, keyboard-scrollable carousel region", () => {
+    for (const name of Object.keys(FACTS)) {
+      const region =
+        blockOf(name).match(/<[a-z]+[^>]*role="region"[^>]*>/)?.[0] ?? "";
+      assert.ok(region, `${name}: no region`);
+      assert.equal(attr(region, "aria-roledescription"), "carousel");
+      assert.equal(attr(region, "aria-label"), `${name} screenshots`);
+      assert.equal(attr(region, "tabindex"), "0");
+    }
+  });
+
+  test("Gallery controls are rendered hidden, with accessible names, for the script to reveal", () => {
+    for (const name of Object.keys(FACTS)) {
+      const block = blockOf(name);
+      const buttons =
+        block.match(/<button[^>]*data-gallery-[a-z]+[^>]*>/g) ?? [];
+      const labels = buttons.map((tag) => attr(tag, "aria-label"));
+      assert.ok(labels.includes("Previous slide"), `${name}: previous`);
+      assert.ok(labels.includes("Next slide"), `${name}: next`);
+      assert.ok(labels.includes("Go to slide 1"), `${name}: dot 1`);
+      const controls =
+        block.match(/<div[^>]*data-gallery-controls[^>]*>/)?.[0] ?? "";
+      assert.match(controls, /\shidden/, `${name}: controls start hidden`);
+    }
+  });
+
+  test("each Slide's picture offers AVIF and WebP at 480w, 960w and 1440w", () => {
+    for (const article of articles()) {
+      for (const figure of article.match(/<figure[\s\S]*?<\/figure>/g) ?? []) {
+        for (const type of ["image/avif", "image/webp"]) {
+          const source = figure
+            .match(/<source[^>]*>/g)
+            ?.find((tag) => tag.includes(`type="${type}"`));
+          assert.ok(source, `expected a ${type} source in a Slide`);
+          for (const width of ["480w", "960w", "1440w"]) {
+            assert.match(
+              source,
+              new RegExp(`\\s${width}[,"]`),
+              `${type} is missing ${width}`,
+            );
+          }
         }
       }
     }
   });
 
-  test("the first img is eager and the other two are lazy", () => {
-    const loading = articles().map(
-      (article) => article.match(/<img[^>]*loading="([^"]+)"/)?.[1],
+  test("only the first Slide of the first Project is eager and high priority; every other image is lazy", () => {
+    const imgs = [...html().matchAll(/<article[\s\S]*?<\/article>/g)].flatMap(
+      (m) => m[0].match(/<img[^>]*>/g) ?? [],
     );
-    assert.deepEqual(loading, ["eager", "lazy", "lazy"]);
+    assert.ok(imgs.length >= 3);
+    imgs.forEach((img, i) => {
+      assert.equal(
+        attr(img, "loading"),
+        i === 0 ? "eager" : "lazy",
+        `img ${i}`,
+      );
+      if (i === 0) assert.equal(attr(img, "fetchpriority"), "high");
+      else assert.notEqual(attr(img, "fetchpriority"), "high");
+    });
+  });
+
+  test("each Project Block carries its Source link and a stack line", () => {
+    for (const name of Object.keys(FACTS)) {
+      assert.match(
+        blockOf(name),
+        /<a [^>]*href="https:\/\/github\.com\/khatrihemang07\/[^"]+"[^>]*>Source<\/a>/,
+      );
+    }
   });
 
   test("localAIWrapper text does not mention subscriptions or API keys", () => {
-    const text = cardOf("localAIWrapper").toLowerCase();
+    const text = blockOf("localAIWrapper").toLowerCase();
     assert.ok(!text.includes("subscription"), "found the word subscription");
     assert.ok(!/api key/.test(text), "found the words API key");
   });
@@ -400,7 +583,7 @@ describe("built full page: look, feel and content", () => {
   test("the lede is the approved text", () => {
     assert.ok(
       page().includes(
-        "I build fast, small tools: native apps and the backends behind them. Backend engineer by day, Rust tinkerer by night.",
+        "I build AI tools, and I want to understand every layer under them: the model, the code and the machine it all runs on.",
       ),
       "expected the approved lede",
     );
@@ -414,11 +597,11 @@ describe("built full page: look, feel and content", () => {
     assert.match(link, /href="#contact"/);
   });
 
-  test("the Hero shows two small Hero Chips, inside the intro: 3 public projects, and Rust · Go · TS", () => {
+  test("the Hero shows one small Hero Chip, Rust · Go · TS · AI, inside the intro, with no project count or Stat Tile", () => {
     const chips = [
       ...page().matchAll(/<li[^>]*class="hero-chip"[^>]*>([\s\S]*?)<\/li>/g),
     ].map((match) => textOf(match[1]));
-    assert.deepEqual(chips, ["3 public projects", "Rust · Go · TS"]);
+    assert.deepEqual(chips, ["Rust · Go · TS · AI"]);
     const intro = page().match(
       /<div class="hero-intro[^"]*"[\s\S]*?<\/header>/,
     )?.[0];
@@ -427,6 +610,22 @@ describe("built full page: look, feel and content", () => {
       "chips live inside the intro block",
     );
     assert.ok(!/stat-tile|stat-value/.test(page()), "no big Stat Tiles remain");
+    assert.doesNotMatch(visibleText(), /public projects?/);
+  });
+
+  test("no projectCount plumbing is left in the Hero or the page", () => {
+    for (const file of ["components/Hero.astro", "pages/index.astro"]) {
+      assert.doesNotMatch(
+        readFileSync(join(root, "src", file), "utf8"),
+        /projectCount/,
+        file,
+      );
+    }
+  });
+
+  test("the bento mosaic is gone from the HTML and the CSS", () => {
+    assert.doesNotMatch(page(), /class="[^"]*\b(bento|work-grid|about-grid)\b/);
+    assert.doesNotMatch(builtCss(), /\.(bento|work-grid|about-grid)\b/);
   });
 
   test("sections work, about and contact exist with their headings", () => {
@@ -446,11 +645,19 @@ describe("built full page: look, feel and content", () => {
     }
   });
 
-  test("About has the approved text", () => {
+  test("About is one single-column glass panel with the approved text and the Timeline inside", () => {
+    const about = sectionOf("about");
     assert.ok(
-      sectionOf("about").includes(
-        "I like software that starts instantly, keeps your data on your own device and does one job well. By day I build event-driven financial-data pipelines in Go. On my own time I make local-first apps in Rust and TypeScript.",
+      about.includes(
+        "Most AI demos are a prompt box. Under a prompt box sits a lot of engineering: which model, how text becomes embeddings, what gets retrieved, when the model should call a tool, and how you'd know any of it is actually good. I care about all of those, and about the fundamentals under them: fast code, clear APIs, honest measurement. That's why I build in Rust and Go and measure my ideas against a baseline, and write up the experiments that failed.",
       ),
+    );
+    const panels = about.match(/<div[^>]*class="[^"]*\btile\b[^"]*"/g) ?? [];
+    assert.equal(panels.length, 1, "one glass panel");
+    assert.match(about, /<ul[^>]*class="timeline"/);
+    assert.ok(
+      about.indexOf("Most AI demos") < about.indexOf('class="timeline"'),
+      "the Timeline follows the text",
     );
   });
 
@@ -501,7 +708,8 @@ describe("built full page: look, feel and content", () => {
   test("no tel: link, no phone-like number, no resume or CV link", () => {
     assert.doesNotMatch(page(), /href="tel:/i);
     assert.doesNotMatch(
-      visibleText(),
+      // A dotted IPv4 address (127.0.0.1 in the localAIWrapper copy) is not a phone number.
+      visibleText().replace(/\b\d{1,3}(?:\.\d{1,3}){3}\b/g, ""),
       /\+?\d[\d ().-]{6,}\d/,
       "expected no phone-like number in the visible text",
     );
@@ -555,6 +763,32 @@ describe("built full page: look, feel and content", () => {
     assert.doesNotMatch(builtCss(), /url\(\s*["']?https?:/);
   });
 
+  test("Bricolage Grotesque and Inter are the preloaded fonts, and Fraunces is gone", () => {
+    const preloads = linkTags().filter(
+      (tag) => /rel="preload"/.test(tag) && /as="font"/.test(tag),
+    );
+    const hrefs = preloads.map((tag) => tag.match(/href="([^"]+)"/)[1]);
+    assert.ok(
+      hrefs.some((h) => /bricolage-grotesque/i.test(h)),
+      "Bricolage preload",
+    );
+    assert.ok(
+      hrefs.some((h) => /inter/i.test(h)),
+      "Inter preload",
+    );
+    assert.ok(!/fraunces/i.test(page()), "Fraunces in the HTML");
+    assert.ok(!/fraunces/i.test(builtCss()), "Fraunces in the CSS");
+    assert.ok(
+      !walkFiles(join(root, "dist")).some((f) => /fraunces/i.test(f)),
+      "a Fraunces file in dist",
+    );
+    assert.doesNotMatch(
+      readFileSync(join(root, "package.json"), "utf8"),
+      /fraunces/i,
+    );
+    assert.match(builtCss(), /--font-display:\s*"?Bricolage Grotesque/);
+  });
+
   test("at least one woff2 font is preloaded with crossorigin", () => {
     const preloads = linkTags().filter(
       (tag) =>
@@ -573,7 +807,7 @@ describe("built full page: look, feel and content", () => {
     const faces = builtCss().split("@font-face").slice(1);
     assert.ok(
       faces.length >= 2,
-      "expected at least a Fraunces and an Inter face",
+      "expected at least a Bricolage Grotesque and an Inter face",
     );
     for (const face of faces) {
       const block = face.slice(0, face.indexOf("}"));
@@ -649,7 +883,7 @@ describe("built navigation: Dock and Ruler", () => {
     }
   });
 
-  test("the top of the page is id top, and each Card article carries its project id", () => {
+  test("the top of the page is id top, and each Project Block article carries its project id", () => {
     assert.equal(idCount("top"), 1);
     assert.deepEqual(articleIds(), [
       "project-markuli",
@@ -1220,7 +1454,7 @@ describe("built look and motion: aurora, glass, reveals and Dock", () => {
 
   test("tiles never transition or animate box-shadow, and hover only moves transform", () => {
     for (const [selector, body] of rulesOf(flat())) {
-      if (!/\.tile|\.card/.test(selector)) continue;
+      if (!/\.tile|\.project-block/.test(selector)) continue;
       const transition = body.match(/transition:[^;]*/)?.[0] ?? "";
       assert.ok(
         !/box-shadow|all/.test(transition),
@@ -1291,13 +1525,17 @@ describe("built look and motion: aurora, glass, reveals and Dock", () => {
     assert.match(reduced, /\.reveal[^{]*\{[^}]*animation:none/);
   });
 
-  test("below-the-fold tiles opt in to reveals, the Hero does not", () => {
+  test("below-the-fold glass panels opt in to reveals, the Hero does not", () => {
     const html = page();
     const revealed = [
       ...html.matchAll(/<article\b[^>]*class="([^"]*)"/g),
     ].filter((match) => /\breveal\b/.test(match[1]));
-    assert.equal(revealed.length, 3, "expected all three Cards to reveal");
-    assert.ok(/class="[^"]*\babout-tile\b[^"]*\breveal\b/.test(html));
+    assert.equal(
+      revealed.length,
+      3,
+      "expected all three Project Blocks to reveal",
+    );
+    assert.ok(/class="[^"]*\babout-panel\b[^"]*\breveal\b/.test(html));
   });
 
   test("the Hero name block and the Contact block sit on the aurora with no tile box", () => {
@@ -1504,5 +1742,186 @@ describe("built look and motion: aurora, glass, reveals and Dock", () => {
     );
     for (const body of base)
       assert.ok(!/opacity:0/.test(body), "a .reveal base rule hides content");
+  });
+});
+
+// Project Block layout, scrollbar and Gallery, read from the built CSS, HTML and script.
+describe("built Project Block layout, scrollbar and Gallery", () => {
+  before(() => {
+    const result = buildOnce();
+    assert.equal(
+      result.status,
+      0,
+      `astro build failed\n${result.stdout}\n${result.stderr}`,
+    );
+  });
+
+  const flat = () => builtCss().replace(/\s+/g, "");
+  const rulesOf = (css) =>
+    [...css.matchAll(/([^{}@;][^{}]*)\{([^{}]*)\}/g)].map((m) => [m[1], m[2]]);
+  const wide = () =>
+    [
+      ...mediaBlocks(builtCss(), "(min-width: 860px)"),
+      ...mediaBlocks(builtCss(), "(width>=860px)"),
+    ].join("");
+  const columnsOf = (css, selectorTest) => {
+    const rule = rulesOf(css).find(
+      ([selector, body]) =>
+        selectorTest(selector) && /grid-template-columns/.test(body),
+    );
+    const value = rule?.[1].match(/grid-template-columns:([^;]*)/)?.[1] ?? "";
+    return [...value.matchAll(/(?:minmax\(0,)?([\d.]+)fr/g)].map((m) =>
+      Number(m[1]),
+    );
+  };
+  const isEven = (selector) =>
+    /\.project-block:nth-of-type\((even|2n)\)/.test(selector) &&
+    !/\.(gallery|project-text)/.test(selector);
+
+  test("odd Project Blocks put the text left and the Gallery in the wider right column (5fr 7fr)", () => {
+    const cols = columnsOf(wide(), (sel) => /(^|,)\.project-block$/.test(sel));
+    assert.deepEqual(cols, [5, 7]);
+  });
+
+  test("even Project Blocks flip to 7fr 5fr and put the Gallery first, so it is still the wider column", () => {
+    const css = wide();
+    const cols = columnsOf(css, isEven);
+    assert.deepEqual(cols, [7, 5]);
+    const first = rulesOf(css).find(
+      ([sel, body]) =>
+        /\.project-block:nth-of-type\((even|2n)\)[^,]*\.gallery/.test(sel) &&
+        /order:-1/.test(body),
+    );
+    assert.ok(first, "expected the Gallery of even blocks to have order:-1");
+  });
+
+  test("alternation uses nth-of-type, not nth-child, because the section label shares the parent", () => {
+    assert.doesNotMatch(flat(), /\.project-block:nth-child/);
+  });
+
+  test("on phones the Gallery comes first and the block is one column", () => {
+    const css = flat();
+    const phoneEnd =
+      css.indexOf("@media(min-width:860px)") > -1
+        ? css.indexOf("@media(min-width:860px)")
+        : css.indexOf("@media(width>=860px)");
+    assert.ok(phoneEnd > -1, "expected the 860px media query");
+    const phone = css.slice(0, phoneEnd);
+    assert.match(
+      phone,
+      /\.project-block>\.gallery\{[^}]*order:-1/,
+      "Gallery first before 860px",
+    );
+    const block = rulesOf(phone).find(([sel]) => /^\.project-block$/.test(sel));
+    assert.match(block?.[1] ?? "", /grid-template-columns:minmax\(0,1fr\)/);
+  });
+
+  test("the page has a thin translucent custom scrollbar with readable thumb colours in light and dark", () => {
+    const css = flat();
+    const rootRule = rulesOf(css)
+      .filter(([sel]) => /(^|,)html$/.test(sel))
+      .map(([, body]) => body)
+      .join(";");
+    assert.match(rootRule, /scrollbar-width:thin/);
+    assert.match(rootRule, /scrollbar-color:[^;]*transparent/);
+    assert.match(css, /::-webkit-scrollbar\{[^}]*width:10px/);
+    const track = rulesOf(css).find(([sel]) =>
+      /^::-webkit-scrollbar-track/.test(sel),
+    );
+    assert.match(track?.[1] ?? "", /background:(transparent|00|#0000)/);
+    const thumb = rulesOf(css).find(([sel]) =>
+      /^::-webkit-scrollbar-thumb$/.test(sel),
+    );
+    assert.match(thumb?.[1] ?? "", /border-radius:10px/);
+    // Light, system dark and manual dark each define a semi-transparent thumb.
+    // The minifier may write the colour as rgba() or as #rrggbbaa.
+    const thumbs = [
+      ...css.matchAll(/--scroll-thumb:(?:rgba\(([^)]*)\)|#([0-9a-f]{8}))/g),
+    ].map((m) =>
+      m[1]
+        ? Number(m[1].split(",")[3])
+        : Number.parseInt(m[2].slice(6), 16) / 255,
+    );
+    assert.ok(
+      thumbs.length >= 3,
+      `expected 3 thumb colours, got ${thumbs.length}`,
+    );
+    for (const alpha of thumbs)
+      assert.ok(alpha > 0 && alpha < 1, `alpha ${alpha}`);
+  });
+
+  test("the Gallery track hides its own scrollbar and snaps horizontally and mandatorily", () => {
+    const css = flat();
+    const track = rulesOf(css)
+      .filter(([sel]) => /(^|,)\.gallery-track$/.test(sel))
+      .map(([, b]) => b)
+      .join(";");
+    assert.match(track, /scrollbar-width:none/);
+    assert.match(
+      track,
+      /scroll-snap-type:x mandatory|scroll-snap-type:xmandatory/,
+    );
+    assert.match(track, /overflow-x:auto/);
+    assert.match(css, /\.gallery-track::-webkit-scrollbar\{display:none\}/);
+  });
+
+  test("each Slide snaps to the track", () => {
+    assert.match(flat(), /\.gallery-slide\{[^}]*scroll-snap-align:/);
+  });
+
+  test("there is a See more of my work on GitHub link with a 44px touch target", () => {
+    const link = (page().match(/<a\b[^>]*>[\s\S]*?<\/a>/g) ?? []).find((a) =>
+      textOf(a).startsWith("See more of my work on GitHub"),
+    );
+    assert.ok(link, "expected the link");
+    assert.equal(textOf(link), "See more of my work on GitHub →");
+    assert.match(link, /href="https:\/\/github\.com\/khatrihemang07"/);
+    assert.match(link, /target="_blank"/);
+    assert.match(link, /rel="noopener"/);
+    const cls = link.match(/class="([^"]*)"/)?.[1].split(" ")[0];
+    assert.ok(cls, "the link has a class");
+    const body = rulesOf(flat())
+      .filter(([sel]) => sel.includes(`.${cls}`))
+      .map(([, b]) => b)
+      .join(";");
+    assert.match(body, /min-height:var\(--touch-target\)|min-height:44px/);
+  });
+
+  test("the Gallery behaviour ships as a bundled module script, with no inline handlers", () => {
+    const moduleScripts = [
+      ...page().matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g),
+    ]
+      .filter(([, attrs]) => /type="module"/.test(attrs))
+      .map(([, attrs, body]) => {
+        const src = attrs.match(/\ssrc="([^"]+)"/)?.[1];
+        return src ? readFileSync(join(root, "dist", src), "utf8") : body;
+      });
+    const gallery = moduleScripts.find(
+      (js) =>
+        /aria-current/.test(js) &&
+        /ArrowRight/.test(js) &&
+        /tablist|role=tab|\[role=.?tab/.test(js),
+    );
+    assert.ok(
+      gallery,
+      "expected a module script handling tabs and the Gallery",
+    );
+    assert.match(
+      gallery,
+      /prefers-reduced-motion/,
+      "reduced motion is respected",
+    );
+    assert.doesNotMatch(page(), /\son[a-z]+="/i);
+  });
+
+  test("smooth scrolling is only enabled when motion is allowed", () => {
+    const blocks = mediaBlocks(
+      builtCss(),
+      "(prefers-reduced-motion: no-preference)",
+    );
+    assert.match(blocks.join(""), /scroll-behavior:smooth/);
+    let outside = flat();
+    for (const block of blocks) outside = outside.replace(block, "");
+    assert.doesNotMatch(outside, /scroll-behavior:smooth/);
   });
 });

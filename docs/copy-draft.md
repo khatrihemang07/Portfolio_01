@@ -1,60 +1,37 @@
-# Site copy: draft for review
+# Site copy
 
-Voice: plain, first-person, specific, with a touch of playfulness in the Card pitches. Terms follow `GLOSSARY.md`.
-Copy approved by the owner on 2026-11-07. Remaining **[write after capture]** items are image alt text, which is now in the content files.
+Voice: plain, first-person, specific. Terms follow `GLOSSARY.md`.
+
+History: the first copy was approved on 2026-11-07. The revamp rewrote the Hero, About and Project Blocks; the owner chose the Hero and About wording on 2026-11-08 after comparing options in a prototype. Every claim in the Project Blocks was fact-checked against each app's README, source and releases on 2026-11-08.
+
+## Where the copy lives
+
+- Project Blocks (pitch, story, features, four Facts with sources, "under the hood" note, Slide captions and alt text): `src/content/projects/*.yaml`. That is the single source; this file does not repeat it.
+- Hero, About, Contact, 404 and metadata: below.
 
 ## Hero
 
-- Name tile: **Hemang Khatri**
-- Lede: I build fast, small tools: native apps and the backends behind them. Backend engineer by day, Rust tinkerer by night.
+- Name: **Hemang Khatri**
+- Lede: I build AI tools, and I want to understand every layer under them: the model, the code and the machine it all runs on.
 - Call to Action: **Available for work and projects** (links to Contact)
-- Hero Chip 1: **3 public projects**
-- Hero Chip 2: **Rust · Go · TS**
+- Hero Chip: **Rust · Go · TS · AI**
 
-## Work: Cards (order: markuli, Mnemora, localAIWrapper)
+## Work
 
-### markuli
-
-- Pitch: Scribble on your screen, then make it vanish.
-- Body: A hotkey turns your whole screen into a whiteboard with Excalidraw-identical ink. Press it again and it's gone.
-- Fact 1: 1.6 MB download (verified: release asset is 1,618,813 bytes)
-- Fact 2: 11 MB idle RAM, 0% idle CPU (verified: 11 MB footprint, 0.0% CPU)
-- Stack: Rust · native macOS · no webview
-- Links: Download (`/releases/latest`), Source
-- Image alt: markuli's red ink circling a bar in a chart on top of an app window. **[write after capture]**
-
-### Mnemora
-
-- Pitch: A journal and to-do app that never leaves your device.
-- Body: Journal, Todo and AI modules share one shell and one SQLite file, on desktop and Android.
-- Fact 1: Desktop + Android
-- Fact 2: All data in one SQLite file
-- Stack: Rust · Tauri 2 · TypeScript
-- Links: Download (`/releases/latest`), Source
-- Image alt: **[write after capture]**
-
-### localAIWrapper
-
-- Pitch: Your CLI, pretending to be an API.
-- Body: Point any OpenAI-compatible client at it. Each request runs one CLI process and returns a standard answer.
-- Fact 1: One process per request, no state
-- Fact 2: OpenAI chat-completions format
-- Stack: TypeScript · Bun
-- Links: Source (no release, so no Download button)
-- Framing note: it is described as an engineering piece. Nothing about using a subscription instead of an API key.
-- Image alt: **[write after capture]**
+- Label: Selected work. Order: markuli, Mnemora, localAIWrapper.
+- Closing link under the Project Blocks: **See more of my work on GitHub →** (https://github.com/khatrihemang07)
 
 ## About
 
-I like software that starts instantly, keeps your data on your own device and does one job well. By day I build event-driven financial-data pipelines in Go. On my own time I make local-first apps in Rust and TypeScript.
+Most AI demos are a prompt box. Under a prompt box sits a lot of engineering: which model, how text becomes embeddings, what gets retrieved, when the model should call a tool, and how you'd know any of it is actually good. I care about all of those, and about the fundamentals under them: fast code, clear APIs, honest measurement. That's why I build in Rust and Go and measure my ideas against a baseline, and write up the experiments that failed.
 
-### Path (Timeline)
+### Timeline
 
 - Shiprocket · Software Engineer, 2025 - now (owner-chosen wording)
 - IIT Kanpur · M.Tech, Computer Science
 - GEC Gandhinagar · B.E., Computer Engineering
 
-## Contact
+## Contact (unchanged from the first approval; not yet redrafted)
 
 - Heading: Say hello
 - Email button (mailto, with a Copy action): khatrihemang07@gmail.com
@@ -62,7 +39,7 @@ I like software that starts instantly, keeps your data on your own device and do
 - LinkedIn: not yet; add when the URL exists
 - No phone number, no résumé link.
 
-## Metadata
+## Metadata (unchanged from the first approval; the description does not mention AI yet)
 
 - Title: Hemang Khatri · Backend engineer and app builder
 - Description: Portfolio of Hemang Khatri: fast native apps and backend tools, including markuli, Mnemora and localAIWrapper.

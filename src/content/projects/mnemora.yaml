@@ -1,14 +1,41 @@
 name: Mnemora
 pitch: A journal and to-do app that never leaves your device.
-body: Journal, Todo and AI modules share one shell and one SQLite file, on desktop and Android.
+story:
+  - "Journal, Todo and an AI module live in one app with one look and one Settings page. Everything you write stays on your device, in a single SQLite file."
+  - "Mnemora opens its Journal scrolled to today and works offline on Mac and Android. I develop it against a separate Sandbox build with fake data so real entries are never touched."
+features:
+  - "Journal: dated days, newest first, with timestamped entries"
+  - "Todo module, plus an Android home-screen widget"
+  - "AI module that answers from your own journal and tasks, using read-only tools, and shows which entries it used"
+  - "Optional device-to-device Sync, no cloud or account: pair with a code and resolve conflicts yourself"
+  - "One shell and Settings shared by every module"
 facts:
-  - text: "Desktop + Android"
+  - text: "Mac + Android"
     source: "Verified 2026-11-07: release v0.2.2 ships both a macOS dmg (Mnemora-0.2.2-macos-aarch64.dmg) and an Android apk (Mnemora-0.2.2-android.apk); the README describes it as offline-first for desktop and Android."
-  - text: "All data in one SQLite file"
+  - text: "1 SQLite file holds everything"
     source: "Verified 2026-11-07 in the code: the app database path is a single mnemora.db file in the app data folder (core paths module), as the README states. Also observed: launching the v0.2.2 release app on an empty home folder created a single mnemora.db (plus its -wal and -shm journal files) in its data folder."
+  - text: "6.4 MB Mac download"
+    source: "Verified 2026-11-08: GitHub release v0.2.2 asset Mnemora-0.2.2-macos-aarch64.dmg is 6,415,569 bytes (6.4 MB as Finder shows it), read with gh release view. The release is Apple silicon only."
+  - text: "Journal and Todo work offline, no account"
+    source: "Verified 2026-11-08: the Mnemora README and GLOSSARY.md both describe it as offline-first with data on the device in one SQLite file, GLOSSARY.md says the optional Sync module works with no account or cloud service, and the source has no sign-in or account screen. The AI module needs a network connection to its chosen provider, so the claim is limited to Journal and Todo, which are local-only."
+hood: "Rust core with a Tauri 2 shell and a TypeScript and Svelte interface. Modules are independent but share the shell, the theme and the one database file. For development there are separate Production and Sandbox builds, and the Sandbox is seeded with about three weeks of demo data."
 stack: Rust · Tauri 2 · TypeScript
 repo: https://github.com/khatrihemang07/Mnemora_v1
 download: https://github.com/khatrihemang07/Mnemora_v1/releases/latest
-image: ../../assets/projects/mnemora.png
-alt: "Mnemora's Journal on a dark theme: dated days listed newest first, each with timestamped entries, and a Write box at the bottom."
+slides:
+  - image: ../../assets/projects/mnemora/home.png
+    alt: "Mnemora's Home screen on a dark theme: a greeting banner and a clock, a Journal card with today's entry, a Todo card with a task due today, and a sidebar listing Home, Journal, Todo with its lists, AI and Settings."
+    caption: "Home: one shell, one card per module"
+  - image: ../../assets/projects/mnemora/journal.png
+    alt: "Mnemora's Journal: days listed newest first, each with a timestamp and a short fictional entry, a Today badge on the latest day, and a Write box at the bottom."
+    caption: "Journal: every day, newest first"
+  - image: ../../assets/projects/mnemora/todo.png
+    alt: "Mnemora's Todo module grouped by list: Home with five open tasks and Trips and plans with three, each with a priority marker, a note and a due date."
+    caption: "Todo: lists, priorities and due dates"
+  - image: ../../assets/projects/mnemora/ai.png
+    alt: "Mnemora's AI module before any provider is connected: an Add a Provider button, an explanation that answers come from the Local AI Wrapper on this machine or another service, and a question box that reads Ask about your journal and tasks."
+    caption: "AI: bring your own provider, such as a local wrapper"
+  - image: ../../assets/projects/mnemora/settings.png
+    alt: "Mnemora's Settings opened on Shortcuts: a list of keyboard shortcuts such as the command palette, go to Journal and go to Todo, with a section menu beside it for Appearance, General, Navigation, Data and storage, Modules and more."
+    caption: "Settings: keyboard-first, with a shortcut for everything"
 order: 2

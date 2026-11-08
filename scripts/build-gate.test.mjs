@@ -1950,5 +1950,15 @@ describe("deployment config", () => {
     assert.equal(config.assets?.directory, "./dist");
     assert.equal(config.assets?.not_found_handling, "404-page");
     assert.equal(config.main, undefined, "static site: no Worker script");
+    assert.equal(
+      config.workers_dev,
+      true,
+      "the workers.dev address is the live site",
+    );
+    assert.equal(
+      config.preview_urls,
+      false,
+      "no public per-version preview addresses",
+    );
   });
 });

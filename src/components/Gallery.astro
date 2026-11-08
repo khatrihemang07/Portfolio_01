@@ -11,6 +11,11 @@ interface Props {
 
 const { name, slides, eager = false } = Astro.props;
 
+// Candidate widths and the width a Gallery really displays at (about 535px from 1240px up, about 46vw from 860px,
+// a phone's width less 80px of padding below that), so no browser fetches a larger file than the layout needs.
+const widths = [480, 720, 960, 1200, 1440];
+const sizes = "(min-width: 1240px) 535px, (min-width: 860px) 46vw, calc(100vw - 80px)";
+
 // The 8:5 frame and the letterbox colours assume a Slide's light and dark images are the same size.
 slides.forEach((slide, i) => {
   const { dark, light } = slide.image;
@@ -46,8 +51,8 @@ slides.forEach((slide, i) => {
               src={slide.image.dark}
               alt={slide.alt}
               formats={["avif", "webp"]}
-              widths={[480, 960, 1440]}
-              sizes="(min-width: 860px) 60vw, 100vw"
+              widths={widths}
+              sizes={sizes}
               loading={lead ? "eager" : "lazy"}
               fetchpriority={lead ? "high" : "auto"}
               class="gallery-image slide-dark"
@@ -57,8 +62,8 @@ slides.forEach((slide, i) => {
                 src={slide.image.light}
                 alt={slide.alt}
                 formats={["avif", "webp"]}
-                widths={[480, 960, 1440]}
-                sizes="(min-width: 860px) 60vw, 100vw"
+                widths={widths}
+                sizes={sizes}
                 loading="lazy"
                 fetchpriority="auto"
                 class="gallery-image slide-light"

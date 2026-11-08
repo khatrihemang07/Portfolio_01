@@ -2430,6 +2430,26 @@ describe("built Project Block structure, tabs, buttons, Facts strip and Gallery"
     assert.match(bodyIn(".project-meta"), /flex-direction:column/);
   });
 
+  test("Gallery images declare the width they really display at, so no browser fetches a larger file than the layout needs", () => {
+    // Real widths: about 535px from 1240px up, about 46vw between 860 and 1240, a phone's width less 80px of padding below that.
+    const expected =
+      "(min-width: 1240px) 535px, (min-width: 860px) 46vw, calc(100vw - 80px)";
+    for (const article of articlesHtml()) {
+      const gallery = article.slice(article.indexOf('class="gallery"'));
+      const sizes = [
+        ...gallery.matchAll(/<(?:source|img)\b[^>]*\ssizes="([^"]*)"/g),
+      ].map((m) => m[1]);
+      assert.ok(sizes.length > 0, "the Gallery has responsive images");
+      for (const value of sizes) assert.equal(value, expected);
+      const widths = new Set(
+        [...gallery.matchAll(/\s(\d+)w[,"]/g)].map((m) => Number(m[1])),
+      );
+      for (const w of [480, 720, 960, 1200, 1440]) {
+        assert.ok(widths.has(w), `expected a ${w}w candidate`);
+      }
+    }
+  });
+
   test("the Gallery image is 8 by 5 and contained, never cropped", () => {
     const body = bodyOf(".gallery-image");
     assert.match(body, /aspect-ratio:8\/5/);
